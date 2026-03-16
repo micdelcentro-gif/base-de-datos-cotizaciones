@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>RC - Claude Remote</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-dim: #8b949e;
+      --accent: #d2a8ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+      --blue: #58a6ff;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      height: 100dvh;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    #status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    #status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      transition: background 0.3s;
+    }
+
+    #status-dot.connected { background: var(--green); }
+    #status-dot.connecting { background: var(--yellow); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Terminal output */
+    #output {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #output::-webkit-scrollbar { width: 4px; }
+    #output::-webkit-scrollbar-track { background: transparent; }
+    #output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .welcome {
+      color: var(--text-dim);
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .welcome h2 { color: var(--accent); font-size: 18px; margin-bottom: 8px; }
+
+    /* ANSI color classes */
+    .ansi-bold { font-weight: bold; }
+    .ansi-dim { opacity: 0.7; }
+    .ansi-italic { font-style: italic; }
+    .ansi-underline { text-decoration: underline; }
+    .ansi-black { color: #484f58; }
+    .ansi-red { color: #f85149; }
+    .ansi-green { color: #3fb950; }
+    .ansi-yellow { color: #d29922; }
+    .ansi-blue { color: #58a6ff; }
+    .ansi-magenta { color: #d2a8ff; }
+    .ansi-cyan { color: #39d353; }
+    .ansi-white { color: #e6edf3; }
+    .ansi-bright-black { color: #6e7681; }
+    .ansi-bright-red { color: #ff7b72; }
+    .ansi-bright-green { color: #56d364; }
+    .ansi-bright-yellow { color: #e3b341; }
+    .ansi-bright-blue { color: #79c0ff; }
+    .ansi-bright-magenta { color: #d2a8ff; }
+    .ansi-bright-cyan { color: #56d364; }
+    .ansi-bright-white { color: #ffffff; }
+
+    .ansi-bg-black { background: #484f58; }
+    .ansi-bg-red { background: #f85149; }
+    .ansi-bg-green { background: #3fb950; }
+    .ansi-bg-yellow { background: #d29922; }
+    .ansi-bg-blue { background: #58a6ff; }
+    .ansi-bg-magenta { background: #d2a8ff; }
+    .ansi-bg-cyan { background: #39d353; }
+    .ansi-bg-white { background: #e6edf3; }
+
+    /* Input bar */
+    #input-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    #input-bar button {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text-dim);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #input-bar button:active {
+      background: var(--border);
+    }
+
+    #msg {
+      flex: 1;
+      height: 40px;
+      padding: 0 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    #msg:focus {
+      border-color: var(--accent);
+    }
+
+    #msg::placeholder {
+      color: var(--text-dim);
+    }
+
+    #send-btn {
+      background: var(--accent) !important;
+      color: var(--bg) !important;
+      border-color: var(--accent) !important;
+      font-weight: 700;
+    }
+
+    /* Safe area for notch phones */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      #input-bar {
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>RC Claude</h1>
+      <div id="status">
+        <span id="status-text">Conectando...</span>
+        <div id="status-dot" class="connecting"></div>
+      </div>
+    </header>
+
+    <div id="output">
+      <div class="welcome">
+        <h2>RC Remote Control</h2>
+        <p>Conectando con tu agente...</p>
+      </div>
+    </div>
+
+    <div id="input-bar">
+      <button id="interrupt-btn" title="Ctrl+C">&#x23F9;</button>
+      <input type="text" id="msg" placeholder="Escribe un comando..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button id="send-btn" title="Enviar">&#x25B6;</button>
+    </div>
+  </div>
+
+  <script>
+    const output = document.getElementById('output');
+    const msgInput = document.getElementById('msg');
+    const sendBtn = document.getElementById('send-btn');
+    const interruptBtn = document.getElementById('interrupt-btn');
+    const statusText = document.getElementById('status-text');
+    const statusDot = document.getElementById('status-dot');
+
+    let ws = null;
+    let firstOutput = true;
+
+    // Get session secret from URL
+    const params = new URLSearchParams(window.location.search);
+    const secret = params.get('s');
+
+    if (!secret) {
+      output.innerHTML = '<div class="welcome"><h2>Error</h2><p>No session secret found. Scan the QR code again.</p></div>';
+    } else {
+      connect();
+    }
+
+    function connect() {
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${location.host}/ws?s=${secret}`);
+
+      ws.onopen = () => {
+        statusText.textContent = 'Conectado';
+        statusDot.className = 'connected';
+      };
+
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'output') {
+            appendOutput(msg.data);
+          } else if (msg.type === 'status') {
+            if (msg.data === 'claude-exited') {
+              statusText.textContent = 'Claude terminó';
+              statusDot.className = '';
+              statusDot.style.background = 'var(--red)';
+            }
+          }
+        } catch {}
+      };
+
+      ws.onclose = () => {
+        statusText.textContent = 'Desconectado';
+        statusDot.className = '';
+        statusDot.style.background = 'var(--red)';
+        // Auto-reconnect after 3s
+        setTimeout(() => {
+          statusText.textContent = 'Reconectando...';
+          statusDot.className = 'connecting';
+          statusDot.style.background = '';
+          connect();
+        }, 3000);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    }
+
+    function appendOutput(data) {
+      if (firstOutput) {
+        output.innerHTML = '';
+        firstOutput = false;
+      }
+      const span = document.createElement('span');
+      span.innerHTML = ansiToHtml(data);
+      output.appendChild(span);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function send() {
+      const text = msgInput.value.trim();
+      if (!text || !ws || ws.readyState !== 1) return;
+      ws.send(JSON.stringify({ type: 'input', data: text }));
+      msgInput.value = '';
+      msgInput.focus();
+    }
+
+    sendBtn.addEventListener('click', send);
+    msgInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') send();
+    });
+
+    interruptBtn.addEventListener('click', () => {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'command', action: 'interrupt' }));
+      }
+    });
+
+    // ANSI to HTML converter
+    function ansiToHtml(text) {
+      const colorMap = {
+        30: 'black', 31: 'red', 32: 'green', 33: 'yellow',
+        34: 'blue', 35: 'magenta', 36: 'cyan', 37: 'white',
+        90: 'bright-black', 91: 'bright-red', 92: 'bright-green', 93: 'bright-yellow',
+        94: 'bright-blue', 95: 'bright-magenta', 96: 'bright-cyan', 97: 'bright-white',
+      };
+      const bgMap = {
+        40: 'black', 41: 'red', 42: 'green', 43: 'yellow',
+        44: 'blue', 45: 'magenta', 46: 'cyan', 47: 'white',
+      };
+
+      let result = '';
+      let i = 0;
+      let openTags = 0;
+
+      while (i < text.length) {
+        if (text[i] === '\x1b' && text[i + 1] === '[') {
+          // Parse CSI sequence
+          let j = i + 2;
+          while (j < text.length && text[j] !== 'm' && text[j] !== 'A' && text[j] !== 'B' &&
+                 text[j] !== 'C' && text[j] !== 'D' && text[j] !== 'H' && text[j] !== 'J' &&
+                 text[j] !== 'K' && text[j] !== 'h' && text[j] !== 'l') {
+            j++;
+          }
+
+          if (j < text.length && text[j] === 'm') {
+            const params = text.slice(i + 2, j).split(';').map(Number);
+            // Close previous tags
+            while (openTags > 0) { result += '</span>'; openTags--; }
+
+            const classes = [];
+            for (const p of params) {
+              if (p === 0) { /* reset - already closed */ }
+              else if (p === 1) classes.push('ansi-bold');
+              else if (p === 2) classes.push('ansi-dim');
+              else if (p === 3) classes.push('ansi-italic');
+              else if (p === 4) classes.push('ansi-underline');
+              else if (colorMap[p]) classes.push(`ansi-${colorMap[p]}`);
+              else if (bgMap[p]) classes.push(`ansi-bg-${bgMap[p]}`);
+            }
+
+            if (classes.length > 0) {
+              result += `<span class="${classes.join(' ')}">`;
+              openTags++;
+            }
+          }
+          // Skip any non-m CSI sequences (cursor movement, etc.)
+          i = j + 1;
+        } else {
+          // Escape HTML
+          const ch = text[i];
+          if (ch === '<') result += '&lt;';
+          else if (ch === '>') result += '&gt;';
+          else if (ch === '&') result += '&amp;';
+          else result += ch;
+          i++;
+        }
+      }
+
+      while (openTags > 0) { result += '</span>'; openTags--; }
+      return result;
+    }
+  </script>
+</body>
+</html>
