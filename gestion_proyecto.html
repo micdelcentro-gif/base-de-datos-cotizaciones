@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MICSA — Gestión de Proyecto</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    header {
+      background: #0a1628;
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .header-left {
+      flex: 1;
+    }
+
+    .header-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header-project {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .status-badge {
+      padding: 6px 14px;
+      background: #0066ff;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .back-link {
+      color: #0066ff;
+      text-decoration: none;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      position: relative;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .tab-button:hover {
+      color: #0066ff;
+    }
+
+    .tab-button.active {
+      color: #0066ff;
+      border-bottom-color: #0066ff;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #0a1628;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #444;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #0066ff;
+      box-shadow: 0 0 0 3px rgba(0,102,255,0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    button {
+      padding: 10px 16px;
+      background: #0066ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #0052cc;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #333;
+    }
+
+    button.secondary:hover {
+      background: #d1d5db;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background: #f9fafb;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #444;
+      border-bottom: 2px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tr:nth-child(even) td {
+      background: #fafbfc;
+    }
+
+    tr:hover td {
+      background: #f0f4ff;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #0066ff;
+    }
+
+    .total-row {
+      background: #f0f4ff !important;
+      font-weight: 600;
+    }
+
+    .total-row:hover {
+      background: #e5e9ff !important;
+    }
+
+    .kpi-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,102,255,0.2);
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .alert-green { color: #15803d; }
+    .alert-yellow { color: #c58a00; }
+    .alert-red { color: #dc2626; }
+
+    .margin-green { background: #dcfce7; }
+    .margin-yellow { background: #fef08a; }
+    .margin-red { background: #fee2e2; }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin: 20px 0;
+    }
+
+    .section-header {
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 25px;
+      margin-bottom: 15px;
+      color: #0a1628;
+      border-left: 4px solid #0066ff;
+      padding-left: 12px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      background: #e5e9ff;
+      border-left: 4px solid #0066ff;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      color: #0a3a6a;
+    }
+
+    .alert.info { background: #e5e9ff; border-left-color: #0066ff; color: #0a3a6a; }
+    .alert.success { background: #dcfce7; border-left-color: #15803d; color: #15500b; }
+    .alert.warning { background: #fef08a; border-left-color: #c58a00; color: #7c2d12; }
+    .alert.error { background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d; }
+
+    @media print {
+      header, .tabs, .button-group { display: none; }
+      .container { padding: 10px; }
+      .card { page-break-inside: avoid; box-shadow: none; border: 1px solid #e5e7eb; }
+      table { font-size: 11px; }
+      td, th { padding: 8px; }
+    }
+
+    .parameters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 15px 0;
+    }
+
+    .parameter-item {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 4px;
+    }
+
+    .parameter-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .parameter-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0066ff;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 768px) {
+      header { flex-direction: column; gap: 15px; align-items: flex-start; }
+      .header-right { flex-direction: column; width: 100%; }
+      .tabs { gap: 4px; }
+      .tab-button { padding: 10px 14px; font-size: 12px; }
+      table { font-size: 11px; }
+      td, th { padding: 8px; }
+      .kpi-cards { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="header-title">MICSA — Gestión de Proyecto</div>
+      <div class="header-project" id="headerProject">Proyecto: Cargando...</div>
+    </div>
+    <div class="header-right">
+      <div class="status-badge" id="statusBadge">En Cotización</div>
+      <a href="cotizador_v2.html" class="back-link">← Volver al Cotizador</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tabs" id="tabBar"></div>
+
+    <!-- TAB 1: COTIZACIÓN -->
+    <div class="tab-content active" id="tab1">
+      <div class="alert alert-info">Datos importados del cotizador. Edita aquí para actualizar el proyecto.</div>
+
+      <div class="card">
+        <div class="card-title">Datos del Proyecto</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Proyecto</label>
+            <input type="text" id="tab1Proyecto" />
+          </div>
+          <div class="form-group">
+            <label>Cliente</label>
+            <input type="text" id="tab1Cliente" />
+          </div>
+          <div class="form-group">
+            <label>Orden de Compra</label>
+            <input type="text" id="tab1OC" />
+          </div>
+          <div class="form-group">
+            <label>Duración (semanas)</label>
+            <input type="number" id="tab1Duracion" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Personal Total</label>
+            <input type="number" id="tab1Personal" min="1" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Desglose del Presupuesto (Lo que Cotizaste)</div>
+        <div class="button-group">
+          <button onclick="importarDelCotizador()">📥 Importar del Cotizador</button>
+          <button class="secondary" onclick="capturaManuali()">✏️ Captura Manual</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Rubro</th>
+              <th style="width: 120px;">Monto Cotizado</th>
+              <th style="width: 200px;">Notas</th>
+            </tr>
+          </thead>
+          <tbody id="tab1RubrosBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td><strong>TOTAL</strong></td>
+              <td><strong id="tab1Total">$0.00</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: DESGLOSE PRESUPUESTO -->
+    <div class="tab-content" id="tab2">
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-label">Total O.C.</div>
+          <div class="kpi-value" id="tab2TotalOC">$0.00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Costo Planeado</div>
+          <div class="kpi-value" id="tab2TotalCosto">$0.00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Utilidad Bruta (Plan)</div>
+          <div class="kpi-value" id="tab2Utilidad">$0.00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Margen % (Plan)</div>
+          <div class="kpi-value" id="tab2Margen">0%</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Comparativa: Precio Venta vs Mi Costo Planeado</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Rubro</th>
+              <th style="width: 130px;">Precio Venta</th>
+              <th style="width: 130px;">Mi Costo Plan</th>
+              <th style="width: 100px;">Ganancia</th>
+              <th style="width: 80px;">Margen %</th>
+            </tr>
+          </thead>
+          <tbody id="tab2RubrosBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td><strong>TOTAL</strong></td>
+              <td id="tab2SumVenta"><strong>$0.00</strong></td>
+              <td id="tab2SumCosto"><strong>$0.00</strong></td>
+              <td id="tab2SumGanancia"><strong>$0.00</strong></td>
+              <td id="tab2SumMargen"><strong>0%</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Parámetros Financieros</div>
+        <div class="parameters-grid">
+          <div class="parameter-item">
+            <div class="parameter-label">Indirectos %</div>
+            <input type="number" id="tab2Indirectos" min="0" max="100" value="10" step="0.1" style="width: 100%; font-size: 16px;" />
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-label">Administración %</div>
+            <input type="number" id="tab2Administracion" min="0" max="100" value="5" step="0.1" style="width: 100%; font-size: 16px;" />
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-label">Utilidad Esperada %</div>
+            <input type="number" id="tab2Utilidad" min="0" max="100" value="10" step="0.1" style="width: 100%; font-size: 16px;" />
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-label">Contingencia %</div>
+            <input type="number" id="tab2Contingencia" min="0" max="100" value="10" step="0.1" style="width: 100%; font-size: 16px;" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: CONTROL SEMANAL -->
+    <div class="tab-content" id="tab3">
+      <div class="alert alert-info">Ingresa el personal real, costo real y avance por semana. Los indicadores se actualizan automáticamente.</div>
+
+      <div class="card">
+        <div class="card-title">Control Semanal de Ejecución</div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 80px;">Semana</th>
+                <th style="width: 100px;">Personal Plan</th>
+                <th style="width: 100px;">Personal Real</th>
+                <th style="width: 100px;">Costo Plan</th>
+                <th style="width: 100px;">Costo Real</th>
+                <th style="width: 100px;">Desviación</th>
+                <th style="width: 80px;">Avance %</th>
+                <th style="width: 120px;">Gasto Acum.</th>
+                <th style="width: 100px;">Saldo vs O.C.</th>
+                <th style="width: 80px;">Alerta</th>
+              </tr>
+            </thead>
+            <tbody id="tab3WeeksBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-container">
+          <canvas id="tab3Chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: NÓMINA -->
+    <div class="tab-content" id="tab4">
+      <div class="card">
+        <div class="card-title">Nómina de Personal</div>
+        <div class="button-group">
+          <button onclick="agregarEmpleado()">➕ Agregar Empleado</button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead id="tab4Head">
+              <tr>
+                <th style="width: 120px;">Nombre</th>
+                <th style="width: 120px;">Puesto</th>
+              </tr>
+            </thead>
+            <tbody id="tab4Body">
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td><strong>TOTAL NÓMINA</strong></td>
+                <td colspan="1000"><strong id="tab4Total">$0.00</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: COSTOS DETALLE -->
+    <div class="tab-content" id="tab5">
+      <div class="alert alert-info">Ingresa cantidades y valores reales por categoría de costo.</div>
+
+      <div class="card">
+        <div class="card-title">Herramienta</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th style="width: 100px;">Precio Unit.</th>
+              <th style="width: 80px;">Cantidad</th>
+              <th style="width: 100px;">Total</th>
+            </tr>
+          </thead>
+          <tbody id="tab5HerramientaBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3"><strong>Total Herramienta</strong></td>
+              <td><strong id="tab5HerramientaTotal">$0.00</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Consumibles</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th style="width: 80px;">Precio Unit.</th>
+              <th style="width: 80px;">Cantidad</th>
+              <th style="width: 100px;">Total</th>
+            </tr>
+          </thead>
+          <tbody id="tab5ConsumiblesBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3"><strong>Total Consumibles</strong></td>
+              <td><strong id="tab5ConsumiblesTotal">$0.00</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">EPP</div>
+        <div class="form-group">
+          <label>Costo Base por Persona</label>
+          <input type="number" id="tab5EPPCosto" value="674.34" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>Cantidad de Personas</label>
+          <input type="number" id="tab5EPPPersonas" value="1" min="1" />
+        </div>
+        <table>
+          <tr>
+            <td><strong>Total EPP</strong></td>
+            <td style="text-align: right;"><strong id="tab5EPPTotal">$0.00</strong></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Equipos / Renta</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th style="width: 100px;">Costo</th>
+              <th style="width: 100px;">Período (días)</th>
+              <th style="width: 100px;">Total</th>
+              <th style="width: 60px;"></th>
+            </tr>
+          </thead>
+          <tbody id="tab5EquiposBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3"><strong>Total Equipos</strong></td>
+              <td><strong id="tab5EquiposTotal">$0.00</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+        <button style="margin-top: 10px;" onclick="agregarEquipo()">➕ Agregar Equipo</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">DC3 / Capacitación</div>
+        <div class="form-group">
+          <label>Costo Unitario DC3</label>
+          <input type="number" id="tab5DC3Costo" value="4200" step="0.01" />
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Posición</th>
+              <th style="width: 80px;">Cantidad</th>
+              <th style="width: 100px;">Total</th>
+            </tr>
+          </thead>
+          <tbody id="tab5DC3Body">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td><strong>Total DC3</strong></td>
+              <td></td>
+              <td><strong id="tab5DC3Total">$0.00</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Salud / Exámenes</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th style="width: 100px;">Costo Unit.</th>
+              <th style="width: 80px;">Cantidad</th>
+              <th style="width: 100px;">Total</th>
+            </tr>
+          </thead>
+          <tbody id="tab5SaludBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="2"><strong>Total Salud</strong></td>
+              <td></td>
+              <td><strong id="tab5SaludTotal">$0.00</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 6: MI UTILIDAD -->
+    <div class="tab-content" id="tab6">
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Ganancia</div>
+          <div class="kpi-value" id="tab6TotalGanancia">$0.00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Margen Real %</div>
+          <div class="kpi-value" id="tab6MargenReal">0%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">O.C. Total</div>
+          <div class="kpi-value" id="tab6OC">$0.00</div>
+        </div>
+        <div class="kpi-card" style="background: linear-gradient(135deg, #15803d 0%, #0d5d2f 100%);">
+          <div class="kpi-label">Estado</div>
+          <div class="kpi-value" id="tab6Estado">Monitoreo</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Desglose de Ganancia por Rubro</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Rubro</th>
+              <th style="width: 130px;">Precio Venta</th>
+              <th style="width: 130px;">Costo Real</th>
+              <th style="width: 100px;">Mi Ganancia</th>
+              <th style="width: 80px;">Margen %</th>
+            </tr>
+          </thead>
+          <tbody id="tab6RubrosBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td><strong>TOTAL</strong></td>
+              <td id="tab6SumVenta"><strong>$0.00</strong></td>
+              <td id="tab6SumCosto"><strong>$0.00</strong></td>
+              <td id="tab6SumGanancia"><strong>$0.00</strong></td>
+              <td id="tab6SumMargen"><strong>0%</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="chart-container">
+          <canvas id="tab6ChartCostos"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-container">
+          <canvas id="tab6ChartGanancia"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: PRESUPUESTO VS REAL -->
+    <div class="tab-content" id="tab7">
+      <div class="card">
+        <div class="card-title">Comparativa Final: Presupuesto vs Gasto Real</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Rubro</th>
+              <th style="width: 130px;">Presupuesto</th>
+              <th style="width: 130px;">Gasto Real</th>
+              <th style="width: 100px;">Diferencia</th>
+              <th style="width: 80px;">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tab7RubrosBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td><strong>TOTAL</strong></td>
+              <td id="tab7SumPresupuesto"><strong>$0.00</strong></td>
+              <td id="tab7SumReal"><strong>$0.00</strong></td>
+              <td id="tab7SumDif"><strong>$0.00</strong></td>
+              <td id="tab7Estado"><strong>✅</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Resumen Ejecutivo</div>
+        <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));; gap: 20px;">
+          <div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Total Presupuestado</div>
+            <div style="font-size: 20px; font-weight: 700; color: #0066ff;" id="tab7TotalPresupuesto">$0.00</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Total Gasto Real</div>
+            <div style="font-size: 20px; font-weight: 700; color: #0066ff;" id="tab7TotalReal">$0.00</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Ahorro / Exceso</div>
+            <div style="font-size: 20px; font-weight: 700; color: #15803d;" id="tab7Ahorro">$0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-container">
+          <canvas id="tab7Chart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <button onclick="exportarCSV()">📊 Exportar Resumen (CSV)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // CONSTANTS
+    const PUESTOS_REF = [
+      { puesto: "Mecánico", salario: 10000 },
+      { puesto: "Soldador", salario: 10000 },
+      { puesto: "Rigger", salario: 10000 },
+      { puesto: "Supervisor", salario: 14000 },
+      { puesto: "Maniobrista", salario: 14000 },
+      { puesto: "Seguridad", salario: 14000 }
+    ];
+
+    const HERRAMIENTA_CATALOGO = [
+      { nombre: "Arco segueta", precio: 318.96 },
+      { nombre: "Llave Stillson", precio: 412.06 },
+      { nombre: "Llave ajustable 10 pulg", precio: 370.68 },
+      { nombre: "Pinza mecanica", precio: 241.68 },
+      { nombre: "Juego llaves mixtas", precio: 862.00 },
+      { nombre: "Desarmador plano", precio: 77.72 },
+      { nombre: "Desarmador cruz", precio: 77.72 },
+      { nombre: "Martillo bola", precio: 228.00 },
+      { nombre: "Cincel", precio: 79.60 },
+      { nombre: "Flexometro 8m", precio: 206.48 },
+      { nombre: "Nivel 24 pulg", precio: 412.06 },
+      { nombre: "Escuadra combinada", precio: 398.00 },
+      { nombre: "Esmeriladora 4.5 pulg", precio: 1389.20 },
+      { nombre: "Taladro percutor", precio: 1741.00 },
+      { nombre: "Sierra sable", precio: 3877.00 },
+      { nombre: "Rotomartillo SDS", precio: 2465.00 },
+      { nombre: "Extension electrica 30m", precio: 590.00 },
+      { nombre: "Cadena 3/8 x 6m", precio: 1296.00 },
+      { nombre: "Grillete 3/4", precio: 179.00 },
+      { nombre: "Eslinga 2 x 3m", precio: 392.00 }
+    ];
+
+    const CONSUMIBLES_CATALOGO = [
+      { producto: "Tanque oxigeno", precio: 460, unidad: "tanque" },
+      { producto: "Tanque acetileno", precio: 1090, unidad: "tanque" },
+      { producto: "Repuesto sierra sable", precio: 186.66, unidad: "pieza" },
+      { producto: "Repuesto sierra cinta", precio: 205.25, unidad: "pieza" },
+      { producto: "Disco corte 4.5 pulg", precio: 32, unidad: "pieza" },
+      { producto: "Cincho", precio: 87, unidad: "bolsa" },
+      { producto: "Gas montacargas", precio: 315, unidad: "tanque" },
+      { producto: "Cinta aislar", precio: 25, unidad: "rollo" },
+      { producto: "Emplaye", precio: 287, unidad: "rollo" }
+    ];
+
+    const RUBROS_DEFAULT = [
+      { rubro: "Hospedaje", cotizado: 0, costoReal: 0 },
+      { rubro: "Traslados", cotizado: 0, costoReal: 0 },
+      { rubro: "Viaticos", cotizado: 0, costoReal: 0 },
+      { rubro: "DC3/Documentacion", cotizado: 0, costoReal: 0 },
+      { rubro: "Herramienta", cotizado: 0, costoReal: 0 },
+      { rubro: "Consumibles", cotizado: 0, costoReal: 0 },
+      { rubro: "Equipos/Renta", cotizado: 0, costoReal: 0 },
+      { rubro: "EPP", cotizado: 0, costoReal: 0 },
+      { rubro: "RC/Seguros", cotizado: 0, costoReal: 0 },
+      { rubro: "Nomina MO", cotizado: 0, costoReal: 0 }
+    ];
+
+    // STATE
+    let data = {
+      proyecto: "Nuevo Proyecto",
+      cliente: "Sin Cliente",
+      oc: "",
+      duracion: 4,
+      personal: 1,
+      status: "En Cotización",
+      rubros: JSON.parse(JSON.stringify(RUBROS_DEFAULT)),
+      weeks: [],
+      empleados: [],
+      herramientas: [],
+      consumibles: [],
+      equipos: [],
+      dc3Posiciones: ["Jefe Proyecto", "Supervisor", "Mecánico", "Soldador", "Rigger", "Maniobrista", "Seguridad", "Maestro"],
+      parametros: { indirectos: 10, administracion: 5, utilidad: 10, contingencia: 10 }
+    };
+
+    let charts = {};
+
+    // UTILITIES
+    function fmt(num) {
+      return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2 }).format(num);
+    }
+
+    function save() {
+      localStorage.setItem('micsa_gestion_data', JSON.stringify(data));
+    }
+
+    function load() {
+      const stored = localStorage.getItem('micsa_gestion_data');
+      if (stored) {
+        data = JSON.parse(stored);
+      }
+      initializeData();
+    }
+
+    function initializeData() {
+      if (data.weeks.length !== data.duracion) {
+        data.weeks = [];
+        for (let i = 1; i <= data.duracion; i++) {
+          data.weeks.push({
+            semana: i,
+            personalPlan: data.personal,
+            personalReal: 0,
+            costoPlan: 0,
+            costoReal: 0,
+            avance: 0
+          });
+        }
+      }
+      if (data.herramientas.length === 0) {
+        data.herramientas = HERRAMIENTA_CATALOGO.map(h => ({ ...h, cantidad: 0 }));
+      }
+      if (data.consumibles.length === 0) {
+        data.consumibles = CONSUMIBLES_CATALOGO.map(c => ({ ...c, cantidad: 0 }));
+      }
+      if (data.dc3Posiciones.length === 0) {
+        data.dc3Posiciones = ["Jefe Proyecto", "Supervisor", "Mecánico", "Soldador", "Rigger", "Maniobrista", "Seguridad", "Maestro"];
+      }
+    }
+
+    function importarDelCotizador() {
+      const imported = localStorage.getItem('micsa_proyecto_activo');
+      if (imported) {
+        const cotizacion = JSON.parse(imported);
+        data.proyecto = cotizacion.proyecto || data.proyecto;
+        data.cliente = cotizacion.cliente || data.cliente;
+        data.oc = cotizacion.oc || "";
+        data.duracion = cotizacion.duracion || 4;
+        data.personal = cotizacion.personal || 1;
+        if (cotizacion.rubros) {
+          data.rubros = cotizacion.rubros.map(r => {
+            const existing = data.rubros.find(x => x.rubro === r.rubro);
+            return { ...r, costoReal: existing ? existing.costoReal : 0 };
+          });
+        }
+        initializeData();
+        save();
+        render();
+        alert('Cotización importada exitosamente');
+      } else {
+        alert('No hay cotización disponible en el cotizador');
+      }
+    }
+
+    function capturaManuali() {
+      alert('Usa los campos de entrada para capturar datos manualmente');
+    }
+
+    function agregarEmpleado() {
+      const nombre = prompt('Nombre del empleado:');
+      if (nombre) {
+        data.empleados.push({ nombre, puesto: "Mecánico", semanas: {} });
+        save();
+        renderTab4();
+      }
+    }
+
+    function agregarEquipo() {
+      data.equipos.push({ descripcion: "Nuevo Equipo", costo: 0, periodo: 1 });
+      save();
+      renderTab5();
+    }
+
+    function exportarCSV() {
+      let csv = "MICSA - RESUMEN DE PROYECTO\n";
+      csv += `Proyecto,${data.proyecto}\n`;
+      csv += `Cliente,${data.cliente}\n`;
+      csv += `O.C.,${data.oc}\n\n`;
+      csv += "PRESUPUESTO VS REAL\n";
+      csv += "Rubro,Presupuesto,Real,Diferencia\n";
+      data.rubros.forEach(r => {
+        csv += `${r.rubro},${r.cotizado},${r.costoReal},${r.cotizado - r.costoReal}\n`;
+      });
+      const link = document.createElement('a');
+      link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      link.download = `MICSA_${data.proyecto}.csv`;
+      link.click();
+    }
+
+    // RENDER FUNCTIONS
+    function renderTabs() {
+      const tabBar = document.getElementById('tabBar');
+      tabBar.innerHTML = '';
+      const tabs = [
+        { id: 'tab1', label: '1. Cotización' },
+        { id: 'tab2', label: '2. Desglose' },
+        { id: 'tab3', label: '3. Control Semanal' },
+        { id: 'tab4', label: '4. Nómina' },
+        { id: 'tab5', label: '5. Costos Detalle' },
+        { id: 'tab6', label: '6. Mi Utilidad' },
+        { id: 'tab7', label: '7. Presupuesto vs Real' }
+      ];
+      tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-button';
+        btn.textContent = tab.label;
+        btn.onclick = () => switchTab(tab.id);
+        tabBar.appendChild(btn);
+      });
+      updateTabBar();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      updateTabBar();
+      if (tabId === 'tab3') setTimeout(() => renderTab3Chart(), 100);
+      if (tabId === 'tab6') setTimeout(() => { renderTab6Chart1(); renderTab6Chart2(); }, 100);
+      if (tabId === 'tab7') setTimeout(() => renderTab7Chart(), 100);
+    }
+
+    function updateTabBar() {
+      const active = document.querySelector('.tab-content.active');
+      const activeId = active ? active.id : 'tab1';
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`.tab-button[onclick="switchTab('${activeId}')"]`)?.classList.add('active');
+    }
+
+    function renderHeader() {
+      document.getElementById('headerProject').textContent = `Proyecto: ${data.proyecto} | Cliente: ${data.cliente}`;
+      document.getElementById('statusBadge').textContent = data.status;
+    }
+
+    function renderTab1() {
+      document.getElementById('tab1Proyecto').value = data.proyecto;
+      document.getElementById('tab1Cliente').value = data.cliente;
+      document.getElementById('tab1OC').value = data.oc;
+      document.getElementById('tab1Duracion').value = data.duracion;
+      document.getElementById('tab1Personal').value = data.personal;
+
+      const body = document.getElementById('tab1RubrosBody');
+      body.innerHTML = '';
+      let total = 0;
+      data.rubros.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.rubro}</td>
+          <td><input type="number" value="${r.cotizado}" step="0.01" onchange="data.rubros[${i}].cotizado=parseFloat(this.value); save(); render();"></td>
+          <td><input type="text" placeholder="Ej: Incluye traslado a sitio" style="width: 100%;"></td>
+        `;
+        body.appendChild(tr);
+        total += r.cotizado;
+      });
+      document.getElementById('tab1Total').textContent = fmt(total);
+    }
+
+    function renderTab2() {
+      const totalOC = data.rubros.reduce((s, r) => s + r.cotizado, 0);
+      document.getElementById('tab2TotalOC').textContent = fmt(totalOC);
+
+      const body = document.getElementById('tab2RubrosBody');
+      body.innerHTML = '';
+      let sumVenta = 0, sumCosto = 0;
+      data.rubros.forEach((r, i) => {
+        const ganancia = r.cotizado - r.costoReal;
+        const margen = r.cotizado > 0 ? (ganancia / r.cotizado * 100).toFixed(1) : 0;
+        const marginClass = margen >= 20 ? 'margin-green' : margen >= 10 ? 'margin-yellow' : 'margin-red';
+        const tr = document.createElement('tr');
+        tr.className = marginClass;
+        tr.innerHTML = `
+          <td>${r.rubro}</td>
+          <td>${fmt(r.cotizado)}</td>
+          <td><input type="number" value="${r.costoReal}" step="0.01" style="width: 100%;" onchange="data.rubros[${i}].costoReal=parseFloat(this.value); save(); render();"></td>
+          <td>${fmt(ganancia)}</td>
+          <td>${margen}%</td>
+        `;
+        body.appendChild(tr);
+        sumVenta += r.cotizado;
+        sumCosto += r.costoReal;
+      });
+      const gananciaTotal = sumVenta - sumCosto;
+      const margenTotal = sumVenta > 0 ? (gananciaTotal / sumVenta * 100).toFixed(1) : 0;
+      document.getElementById('tab2SumVenta').textContent = fmt(sumVenta);
+      document.getElementById('tab2SumCosto').textContent = fmt(sumCosto);
+      document.getElementById('tab2SumGanancia').textContent = fmt(gananciaTotal);
+      document.getElementById('tab2SumMargen').textContent = margenTotal + '%';
+      document.getElementById('tab2TotalCosto').textContent = fmt(sumCosto);
+      document.getElementById('tab2Utilidad').textContent = fmt(gananciaTotal);
+      document.getElementById('tab2Margen').textContent = margenTotal + '%';
+    }
+
+    function renderTab3() {
+      const totalOC = data.rubros.reduce((s, r) => s + r.cotizado, 0);
+      const duracion = data.duracion;
+      const costoPlanSemanal = totalOC / duracion;
+
+      const body = document.getElementById('tab3WeeksBody');
+      body.innerHTML = '';
+      let gastoAcum = 0;
+      data.weeks.forEach((w, i) => {
+        gastoAcum += w.costoReal;
+        const saldo = totalOC - gastoAcum;
+        const desviacion = w.costoReal - costoPlanSemanal;
+        const desviacionPct = costoPlanSemanal > 0 ? Math.abs(desviacion / costoPlanSemanal * 100) : 0;
+        let alerta = '🟢';
+        if (desviacionPct > 15) alerta = '🔴';
+        else if (desviacionPct > 5) alerta = '🟡';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${w.semana}</td>
+          <td>${w.personalPlan}</td>
+          <td><input type="number" value="${w.personalReal}" step="1" min="0" style="width: 100%;" onchange="data.weeks[${i}].personalReal=parseInt(this.value); save(); render();"></td>
+          <td>${fmt(costoPlanSemanal)}</td>
+          <td><input type="number" value="${w.costoReal}" step="0.01" style="width: 100%;" onchange="data.weeks[${i}].costoReal=parseFloat(this.value); save(); render();"></td>
+          <td>${fmt(desviacion)}</td>
+          <td><input type="number" value="${w.avance}" step="1" min="0" max="100" style="width: 100%;" onchange="data.weeks[${i}].avance=parseInt(this.value); save(); render();">%</td>
+          <td>${fmt(gastoAcum)}</td>
+          <td>${fmt(saldo)}</td>
+          <td>${alerta}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function renderTab3Chart() {
+      const ctx = document.getElementById('tab3Chart');
+      if (!ctx) return;
+      const totalOC = data.rubros.reduce((s, r) => s + r.cotizado, 0);
+      const costoPlanSemanal = totalOC / data.duracion;
+      const labels = data.weeks.map(w => `Sem ${w.semana}`);
+      const planData = data.weeks.map(() => costoPlanSemanal);
+      const realData = data.weeks.map(w => w.costoReal);
+      if (charts['tab3']) charts['tab3'].destroy();
+      charts['tab3'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Costo Plan', data: planData, borderColor: '#0066ff', backgroundColor: 'rgba(0,102,255,0.1)', tension: 0.3 },
+            { label: 'Costo Real', data: realData, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.1)', tension: 0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { beginAtZero: true, ticks: { callback: v => fmt(v) } } }
+        }
+      });
+    }
+
+    function renderTab4() {
+      const duracion = data.duracion;
+      const head = document.getElementById('tab4Head');
+      head.innerHTML = '<tr><th style="width: 120px;">Nombre</th><th style="width: 120px;">Puesto</th>';
+      for (let w = 1; w <= duracion; w++) {
+        const th = document.createElement('th');
+        th.style.width = '80px';
+        th.textContent = `S${w}`;
+        head.appendChild(th);
+      }
+      const thTotal = document.createElement('th');
+      thTotal.style.width = '100px';
+      thTotal.textContent = 'Total';
+      head.appendChild(thTotal);
+      head.innerHTML += '</tr>';
+
+      const body = document.getElementById('tab4Body');
+      body.innerHTML = '';
+      let totalNomina = 0;
+      data.empleados.forEach((emp, idx) => {
+        let totalEmp = 0;
+        const puestoRef = PUESTOS_REF.find(p => p.puesto === emp.puesto);
+        const salarioRef = puestoRef ? puestoRef.salario : 10000;
+        const tr = document.createElement('tr');
+        let rowHTML = `<td><input type="text" value="${emp.nombre}" style="width: 100%;" onchange="data.empleados[${idx}].nombre=this.value; save();"></td>`;
+        rowHTML += `<td><select onchange="data.empleados[${idx}].puesto=this.value; save(); render();" style="width: 100%;">`;
+        PUESTOS_REF.forEach(p => {
+          rowHTML += `<option value="${p.puesto}" ${emp.puesto === p.puesto ? 'selected' : ''}>${p.puesto}</option>`;
+        });
+        rowHTML += `</select><div style="font-size: 11px; color: #999;">Ref: ${fmt(salarioRef)}</div></td>`;
+        for (let w = 1; w <= duracion; w++) {
+          const val = emp.semanas[w] || 0;
+          rowHTML += `<td><input type="number" value="${val}" step="0.01" style="width: 100%;" onchange="data.empleados[${idx}].semanas[${w}]=parseFloat(this.value); save(); render();"></td>`;
+          totalEmp += val;
+        }
+        rowHTML += `<td style="font-weight: 600; color: #0066ff;">${fmt(totalEmp)}</td>`;
+        tr.innerHTML = rowHTML;
+        body.appendChild(tr);
+        totalNomina += totalEmp;
+      });
+      document.getElementById('tab4Total').textContent = fmt(totalNomina);
+      data.rubros.find(r => r.rubro === 'Nomina MO').costoReal = totalNomina;
+      save();
+    }
+
+    function renderTab5() {
+      // HERRAMIENTA
+      const herramientaBody = document.getElementById('tab5HerramientaBody');
+      herramientaBody.innerHTML = '';
+      let herramientaTotal = 0;
+      data.herramientas.forEach((h, i) => {
+        const total = h.precio * h.cantidad;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${h.nombre}</td>
+          <td>${fmt(h.precio)}</td>
+          <td><input type="number" value="${h.cantidad}" step="0.1" min="0" style="width: 100%;" onchange="data.herramientas[${i}].cantidad=parseFloat(this.value); save(); renderTab5();"></td>
+          <td>${fmt(total)}</td>
+        `;
+        herramientaBody.appendChild(tr);
+        herramientaTotal += total;
+      });
+      document.getElementById('tab5HerramientaTotal').textContent = fmt(herramientaTotal);
+
+      // CONSUMIBLES
+      const consumiblesBody = document.getElementById('tab5ConsumiblesBody');
+      consumiblesBody.innerHTML = '';
+      let consumiblesTotal = 0;
+      data.consumibles.forEach((c, i) => {
+        const total = c.precio * c.cantidad;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${c.producto}</td>
+          <td>${fmt(c.precio)}</td>
+          <td><input type="number" value="${c.cantidad}" step="0.1" min="0" style="width: 100%;" onchange="data.consumibles[${i}].cantidad=parseFloat(this.value); save(); renderTab5();"></td>
+          <td>${fmt(total)}</td>
+        `;
+        consumiblesBody.appendChild(tr);
+        consumiblesTotal += total;
+      });
+      document.getElementById('tab5ConsumiblesTotal').textContent = fmt(consumiblesTotal);
+
+      // EPP
+      const eppCosto = parseFloat(document.getElementById('tab5EPPCosto').value) || 674.34;
+      const eppPersonas = parseInt(document.getElementById('tab5EPPPersonas').value) || 1;
+      const eppTotal = eppCosto * eppPersonas;
+      document.getElementById('tab5EPPTotal').textContent = fmt(eppTotal);
+
+      // EQUIPOS
+      const equiposBody = document.getElementById('tab5EquiposBody');
+      equiposBody.innerHTML = '';
+      let equiposTotal = 0;
+      data.equipos.forEach((e, i) => {
+        const total = e.costo * e.periodo;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input type="text" value="${e.descripcion}" style="width: 100%;" onchange="data.equipos[${i}].descripcion=this.value; save();"></td>
+          <td><input type="number" value="${e.costo}" step="0.01" style="width: 100%;" onchange="data.equipos[${i}].costo=parseFloat(this.value); save(); renderTab5();"></td>
+          <td><input type="number" value="${e.periodo}" step="1" min="1" style="width: 100%;" onchange="data.equipos[${i}].periodo=parseInt(this.value); save(); renderTab5();"></td>
+          <td>${fmt(total)}</td>
+          <td><button class="secondary" onclick="data.equipos.splice(${i},1); save(); renderTab5();">Eliminar</button></td>
+        `;
+        equiposBody.appendChild(tr);
+        equiposTotal += total;
+      });
+      document.getElementById('tab5EquiposTotal').textContent = fmt(equiposTotal);
+
+      // DC3
+      const dc3Body = document.getElementById('tab5DC3Body');
+      const dc3Costo = parseFloat(document.getElementById('tab5DC3Costo').value) || 4200;
+      dc3Body.innerHTML = '';
+      let dc3Total = 0;
+      data.dc3Posiciones.forEach((pos, i) => {
+        const cantidad = data.empleados.filter(e => e.puesto === pos).length;
+        const total = cantidad * dc3Costo;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${pos}</td><td>${cantidad}</td><td>${fmt(total)}</td>`;
+        dc3Body.appendChild(tr);
+        dc3Total += total;
+      });
+      document.getElementById('tab5DC3Total').textContent = fmt(dc3Total);
+
+      // SALUD
+      const saludBody = document.getElementById('tab5SaludBody');
+      saludBody.innerHTML = '';
+      const antidopingCosto = 350;
+      const antidopingCant = 14;
+      const examenCosto = 800;
+      const examenCant = 14;
+      const antidopingTotal = antidopingCosto * antidopingCant;
+      const examenTotal = examenCosto * examenCant;
+      saludBody.innerHTML = `
+        <tr>
+          <td>Antidoping</td>
+          <td><input type="number" value="${antidopingCosto}" step="0.01" style="width: 100%;"></td>
+          <td>${antidopingCant}</td>
+          <td>${fmt(antidopingTotal)}</td>
+        </tr>
+        <tr>
+          <td>Exámenes Médicos</td>
+          <td><input type="number" value="${examenCosto}" step="0.01" style="width: 100%;"></td>
+          <td>${examenCant}</td>
+          <td>${fmt(examenTotal)}</td>
+        </tr>
+      `;
+      const saludTotal = antidopingTotal + examenTotal;
+      document.getElementById('tab5SaludTotal').textContent = fmt(saludTotal);
+
+      // UPDATE RUBROS COSTOS REALES
+      data.rubros.find(r => r.rubro === 'Herramienta').costoReal = herramientaTotal;
+      data.rubros.find(r => r.rubro === 'Consumibles').costoReal = consumiblesTotal;
+      data.rubros.find(r => r.rubro === 'EPP').costoReal = eppTotal;
+      data.rubros.find(r => r.rubro === 'Equipos/Renta').costoReal = equiposTotal;
+      data.rubros.find(r => r.rubro === 'DC3/Documentacion').costoReal = dc3Total;
+      data.rubros.find(r => r.rubro === 'Salud').costoReal = saludTotal;
+      save();
+    }
+
+    function renderTab6() {
+      const totalOC = data.rubros.reduce((s, r) => s + r.cotizado, 0);
+      const totalCosto = data.rubros.reduce((s, r) => s + r.costoReal, 0);
+      const ganancia = totalOC - totalCosto;
+      const margen = totalOC > 0 ? (ganancia / totalOC * 100).toFixed(1) : 0;
+      const estado = ganancia > 0 ? '✅ GANANDO' : '❌ PERDIENDO';
+      document.getElementById('tab6TotalGanancia').textContent = fmt(ganancia);
+      document.getElementById('tab6MargenReal').textContent = margen + '%';
+      document.getElementById('tab6OC').textContent = fmt(totalOC);
+      document.getElementById('tab6Estado').textContent = estado;
+
+      const body = document.getElementById('tab6RubrosBody');
+      body.innerHTML = '';
+      let sumVenta = 0, sumCosto = 0;
+      data.rubros.forEach(r => {
+        const gananciaRubro = r.cotizado - r.costoReal;
+        const margenRubro = r.cotizado > 0 ? (gananciaRubro / r.cotizado * 100).toFixed(1) : 0;
+        const marginClass = margenRubro >= 20 ? 'margin-green' : margenRubro >= 10 ? 'margin-yellow' : 'margin-red';
+        const tr = document.createElement('tr');
+        tr.className = marginClass;
+        tr.innerHTML = `
+          <td>${r.rubro}</td>
+          <td>${fmt(r.cotizado)}</td>
+          <td>${fmt(r.costoReal)}</td>
+          <td>${fmt(gananciaRubro)}</td>
+          <td>${margenRubro}%</td>
+        `;
+        body.appendChild(tr);
+        sumVenta += r.cotizado;
+        sumCosto += r.costoReal;
+      });
+      const gananciaTotal = sumVenta - sumCosto;
+      const margenTotal = sumVenta > 0 ? (gananciaTotal / sumVenta * 100).toFixed(1) : 0;
+      document.getElementById('tab6SumVenta').textContent = fmt(sumVenta);
+      document.getElementById('tab6SumCosto').textContent = fmt(sumCosto);
+      document.getElementById('tab6SumGanancia').textContent = fmt(gananciaTotal);
+      document.getElementById('tab6SumMargen').textContent = margenTotal + '%';
+    }
+
+    function renderTab6Chart1() {
+      const ctx = document.getElementById('tab6ChartCostos');
+      if (!ctx) return;
+      const labels = data.rubros.map(r => r.rubro);
+      const costos = data.rubros.map(r => r.costoReal);
+      const ganancias = data.rubros.map(r => r.cotizado - r.costoReal);
+      if (charts['tab6-1']) charts['tab6-1'].destroy();
+      charts['tab6-1'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Costo Real', data: costos, backgroundColor: '#0066ff' },
+            { label: 'Mi Ganancia', data: ganancias, backgroundColor: '#15803d' }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: { x: { stacked: true, ticks: { callback: v => fmt(v) } } }
+        }
+      });
+    }
+
+    function renderTab6Chart2() {
+      const ctx = document.getElementById('tab6ChartGanancia');
+      if (!ctx) return;
+      const totalCosto = data.rubros.reduce((s, r) => s + r.costoReal, 0);
+      const totalGanancia = data.rubros.reduce((s, r) => s + (r.cotizado - r.costoReal), 0);
+      if (charts['tab6-2']) charts['tab6-2'].destroy();
+      charts['tab6-2'] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Costo Actual', 'Mi Ganancia'],
+          datasets: [{
+            data: [totalCosto, totalGanancia],
+            backgroundColor: ['#0066ff', '#15803d'],
+            borderColor: ['white', 'white'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    function renderTab7() {
+      const totalOC = data.rubros.reduce((s, r) => s + r.cotizado, 0);
+      const totalReal = data.rubros.reduce((s, r) => s + r.costoReal, 0);
+      const diferencia = totalOC - totalReal;
+      document.getElementById('tab7TotalPresupuesto').textContent = fmt(totalOC);
+      document.getElementById('tab7TotalReal').textContent = fmt(totalReal);
+      document.getElementById('tab7Ahorro').textContent = fmt(diferencia);
+
+      const body = document.getElementById('tab7RubrosBody');
+      body.innerHTML = '';
+      let sumPres = 0, sumReal = 0;
+      data.rubros.forEach(r => {
+        const dif = r.cotizado - r.costoReal;
+        let estado = '✅ Dentro';
+        if (r.costoReal > 0) {
+          const exceso = r.costoReal - r.cotizado;
+          if (exceso > 0 && exceso > r.cotizado * 0.1) estado = '🔴 Excedido >10%';
+          else if (exceso > 0) estado = '⚠️ Excedido <10%';
+        } else if (r.cotizado > 0) {
+          estado = '➖ Sin gasto';
+        }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.rubro}</td>
+          <td>${fmt(r.cotizado)}</td>
+          <td>${fmt(r.costoReal)}</td>
+          <td>${fmt(dif)}</td>
+          <td>${estado}</td>
+        `;
+        body.appendChild(tr);
+        sumPres += r.cotizado;
+        sumReal += r.costoReal;
+      });
+      const sumDif = sumPres - sumReal;
+      document.getElementById('tab7SumPresupuesto').textContent = fmt(sumPres);
+      document.getElementById('tab7SumReal').textContent = fmt(sumReal);
+      document.getElementById('tab7SumDif').textContent = fmt(sumDif);
+      document.getElementById('tab7Estado').textContent = sumDif >= 0 ? '✅ Ahorro' : '🔴 Exceso';
+    }
+
+    function renderTab7Chart() {
+      const ctx = document.getElementById('tab7Chart');
+      if (!ctx) return;
+      const totalOC = data.rubros.reduce((s, r) => s + r.cotizado, 0);
+      const totalCosto = data.rubros.reduce((s, r) => s + r.costoReal, 0);
+      const ganancia = totalOC - totalCosto;
+      if (charts['tab7']) charts['tab7'].destroy();
+      charts['tab7'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Flujo Financiero'],
+          datasets: [
+            { label: 'Orden de Compra', data: [totalOC], backgroundColor: '#0066ff' },
+            { label: 'Costo Real', data: [totalCosto], backgroundColor: '#dc2626' },
+            { label: 'Mi Ganancia', data: [ganancia], backgroundColor: '#15803d' }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: { x: { stacked: false, ticks: { callback: v => fmt(v) } } }
+        }
+      });
+    }
+
+    // MAIN RENDER
+    function render() {
+      renderHeader();
+      renderTab1();
+      renderTab2();
+      renderTab3();
+      renderTab4();
+      renderTab5();
+      renderTab6();
+      renderTab7();
+    }
+
+    // EVENT LISTENERS
+    document.getElementById('tab1Proyecto').addEventListener('change', e => { data.proyecto = e.target.value; save(); renderHeader(); });
+    document.getElementById('tab1Cliente').addEventListener('change', e => { data.cliente = e.target.value; save(); renderHeader(); });
+    document.getElementById('tab1OC').addEventListener('change', e => { data.oc = e.target.value; save(); });
+    document.getElementById('tab1Duracion').addEventListener('change', e => {
+      data.duracion = parseInt(e.target.value);
+      initializeData();
+      save();
+      render();
+    });
+    document.getElementById('tab1Personal').addEventListener('change', e => { data.personal = parseInt(e.target.value); save(); renderTab3(); });
+    document.getElementById('tab5EPPCosto').addEventListener('change', () => { save(); renderTab5(); });
+    document.getElementById('tab5EPPPersonas').addEventListener('change', () => { save(); renderTab5(); });
+    document.getElementById('tab5DC3Costo').addEventListener('change', () => { save(); renderTab5(); });
+    document.getElementById('tab2Indirectos').addEventListener('change', e => { data.parametros.indirectos = parseFloat(e.target.value); save(); });
+    document.getElementById('tab2Administracion').addEventListener('change', e => { data.parametros.administracion = parseFloat(e.target.value); save(); });
+    document.getElementById('tab2Utilidad').addEventListener('change', e => { data.parametros.utilidad = parseFloat(e.target.value); save(); });
+    document.getElementById('tab2Contingencia').addEventListener('change', e => { data.parametros.contingencia = parseFloat(e.target.value); save(); });
+
+    // INIT
+    window.addEventListener('load', () => {
+      load();
+      renderTabs();
+      render();
+    });
+  </script>
+</body>
+</html>

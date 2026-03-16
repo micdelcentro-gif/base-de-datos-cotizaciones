@@ -1,0 +1,835 @@
+// ============================================================
+// BASES DE DATOS — COTIZADOR MICSA
+// Versión: 1.0 | Fecha: 2026-03-16
+// Generado desde: bases co.xlsx
+// ============================================================
+
+// ─────────────────────────────────────────────
+// 1. TIPO DE CAMBIO Y BASE OPERATIVA
+// ─────────────────────────────────────────────
+const MICSA_CONFIG = {
+  tipoCambio: 20.00,        // USD → MXN
+  baseOperativa: "Monclova, Coahuila",
+  version: "1.0",
+  fecha: "2026-03-16"
+};
+
+// ─────────────────────────────────────────────
+// 2. PARÁMETROS FINANCIEROS GLOBALES
+// ─────────────────────────────────────────────
+const PARAMETROS_FINANCIEROS = {
+  indirectos: 0.10,         // 10%
+  administracion: 0.05,     // 5%
+  utilidad: 0.10,           // 10-12%
+  contingencia: 0.10        // 10%
+};
+
+// ─────────────────────────────────────────────
+// 3. BASE DE EQUIPOS Y RENTAS (43 proveedores)
+// ─────────────────────────────────────────────
+const EQUIPOS_RENTA = [
+  {
+    "proveedor": "Bellavista",
+    "equipo": "Montacargas",
+    "capacidad": "2,500 kg",
+    "moneda": "USD",
+    "costoDia": 155.0,
+    "costoSemana": 467.0,
+    "costoMes": 1414.0,
+    "flete": "Incluido"
+  },
+  {
+    "proveedor": "Bellavista",
+    "equipo": "Montacargas",
+    "capacidad": "2,750 kg",
+    "moneda": "USD",
+    "costoDia": 168.0,
+    "costoSemana": 507.0,
+    "costoMes": 1534.0,
+    "flete": "Incluido"
+  },
+  {
+    "proveedor": "Bellavista",
+    "equipo": "Montacargas",
+    "capacidad": "3,000 kg",
+    "moneda": "USD",
+    "costoDia": 214.0,
+    "costoSemana": 648.0,
+    "costoMes": 1962.0,
+    "flete": "Incluido"
+  },
+  {
+    "proveedor": "Bellavista",
+    "equipo": "Montacargas",
+    "capacidad": "3,500 kg",
+    "moneda": "USD",
+    "costoDia": 270.0,
+    "costoSemana": 815.0,
+    "costoMes": 2469.0,
+    "flete": "Incluido"
+  },
+  {
+    "proveedor": "Bellavista",
+    "equipo": "Montacargas",
+    "capacidad": "4,500 kg",
+    "moneda": "USD",
+    "costoDia": 367.0,
+    "costoSemana": 1110.0,
+    "costoMes": 3363.0,
+    "flete": "10000"
+  },
+  {
+    "proveedor": "Bellavista",
+    "equipo": "Montacargas",
+    "capacidad": "7,000 kg",
+    "moneda": "USD",
+    "costoDia": 533.0,
+    "costoSemana": 1614.0,
+    "costoMes": 4888.0,
+    "flete": "10000"
+  },
+  {
+    "proveedor": "Bellavista",
+    "equipo": "Montacargas",
+    "capacidad": "16,000 kg",
+    "moneda": "USD",
+    "costoDia": 883.0,
+    "costoSemana": 2673.0,
+    "costoMes": 8100.0,
+    "flete": "10000"
+  },
+  {
+    "proveedor": "BMR Montacargas",
+    "equipo": "Hangcha CPCD50",
+    "capacidad": "5 Ton diesel",
+    "moneda": "USD",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 2469.0,
+    "flete": ""
+  },
+  {
+    "proveedor": "BMR Montacargas",
+    "equipo": "Hangcha CPCD38",
+    "capacidad": "3.8 Ton diesel",
+    "moneda": "USD",
+    "costoDia": 214.0,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": ""
+  },
+  {
+    "proveedor": "BMR Montacargas",
+    "equipo": "Hangcha CPCYD38",
+    "capacidad": "3.8 Ton diesel",
+    "moneda": "USD",
+    "costoDia": null,
+    "costoSemana": 648.0,
+    "costoMes": null,
+    "flete": ""
+  },
+  {
+    "proveedor": "BMR Montacargas",
+    "equipo": "Hangcha CPCYD38",
+    "capacidad": "3.8 Ton diesel",
+    "moneda": "USD",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 1962.0,
+    "flete": ""
+  },
+  {
+    "proveedor": "Rigging Industry",
+    "equipo": "Versa/Veralift",
+    "capacidad": "40-60 Ton",
+    "moneda": "MXN",
+    "costoDia": 28000.0,
+    "costoSemana": 150000.0,
+    "costoMes": 580000.0,
+    "flete": "18000"
+  },
+  {
+    "proveedor": "Rigging Industry",
+    "equipo": "Montacargas",
+    "capacidad": "60-80 Ton",
+    "moneda": "MXN",
+    "costoDia": 38000.0,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": "18000"
+  },
+  {
+    "proveedor": "Rigging Industry",
+    "equipo": "Montacargas",
+    "capacidad": "15,000 lbs",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 55000.0,
+    "flete": ""
+  },
+  {
+    "proveedor": "Rigging Industry",
+    "equipo": "Brazo articulado",
+    "capacidad": "45 pies",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 38000.0,
+    "flete": "7,000-30,000"
+  },
+  {
+    "proveedor": "Rigging Industry",
+    "equipo": "Montacargas",
+    "capacidad": "10,000 lbs",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": 25000.0,
+    "costoMes": null,
+    "flete": ""
+  },
+  {
+    "proveedor": "Iron Rentals",
+    "equipo": "Manlift",
+    "capacidad": "45 ft",
+    "moneda": "MXN",
+    "costoDia": 2700.0,
+    "costoSemana": 18900.0,
+    "costoMes": 30000.0,
+    "flete": "2500"
+  },
+  {
+    "proveedor": "Iron Rentals",
+    "equipo": "Manlift",
+    "capacidad": "60 ft",
+    "moneda": "MXN",
+    "costoDia": 3000.0,
+    "costoSemana": 21000.0,
+    "costoMes": 37500.0,
+    "flete": "2500"
+  },
+  {
+    "proveedor": "SEYSO Norte",
+    "equipo": "MC Hyster",
+    "capacidad": "7 Ton",
+    "moneda": "MXN",
+    "costoDia": 4500.0,
+    "costoSemana": 28000.0,
+    "costoMes": null,
+    "flete": "2100"
+  },
+  {
+    "proveedor": "SEYSO Norte",
+    "equipo": "MC Doosan",
+    "capacidad": "9 Ton",
+    "moneda": "MXN",
+    "costoDia": 7000.0,
+    "costoSemana": 45500.0,
+    "costoMes": null,
+    "flete": "8000"
+  },
+  {
+    "proveedor": "Prov. CDMX Coltongo",
+    "equipo": "Montacargas",
+    "capacidad": "7 Ton gas LP",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 65000.0,
+    "flete": "10000"
+  },
+  {
+    "proveedor": "Prov. CDMX Coltongo",
+    "equipo": "Montacargas",
+    "capacidad": "8,000 lbs",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 17000.0,
+    "flete": "Incluido"
+  },
+  {
+    "proveedor": "BW Rentals",
+    "equipo": "MC torre triple",
+    "capacidad": "12,000 lbs",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 40000.0,
+    "flete": "7000"
+  },
+  {
+    "proveedor": "ALHESO (AGM)",
+    "equipo": "Montacargas",
+    "capacidad": "15,000 lbs",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": 25000.0,
+    "costoMes": null,
+    "flete": ""
+  },
+  {
+    "proveedor": "ForkFlock",
+    "equipo": "MC Hyster 155XL",
+    "capacidad": "7 Ton",
+    "moneda": "MXN",
+    "costoDia": 4000.0,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": "8000"
+  },
+  {
+    "proveedor": "ForkFlock",
+    "equipo": "MC Toyota 7FGU45",
+    "capacidad": "10,000 lbs",
+    "moneda": "MXN",
+    "costoDia": 2700.0,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": "7000"
+  },
+  {
+    "proveedor": "CIASA Contractors",
+    "equipo": "Gantry",
+    "capacidad": "400 Ton",
+    "moneda": "USD",
+    "costoDia": 3300.0,
+    "costoSemana": 14220.0,
+    "costoMes": 54000.0,
+    "flete": "5500"
+  },
+  {
+    "proveedor": "GYMBSA",
+    "equipo": "Gantry",
+    "capacidad": "500 Ton",
+    "moneda": "USD",
+    "costoDia": 9600.0,
+    "costoSemana": 20120.0,
+    "costoMes": 48940.0,
+    "flete": "Incluido"
+  },
+  {
+    "proveedor": "MC Acuna",
+    "equipo": "MC 7T + Tijera + Articulada",
+    "capacidad": "Varios",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 109800.0,
+    "flete": "30000"
+  },
+  {
+    "proveedor": "Prov. COT 754",
+    "equipo": "Plataformas + MC",
+    "capacidad": "45ft + 10K lbs",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 234000.0,
+    "flete": ""
+  },
+  {
+    "proveedor": "Prov. NRD",
+    "equipo": "Montacargas",
+    "capacidad": "",
+    "moneda": "MXN",
+    "costoDia": 1500.0,
+    "costoSemana": null,
+    "costoMes": 20000.0,
+    "flete": "11000"
+  },
+  {
+    "proveedor": "Gruas Garcia",
+    "equipo": "Grua hidraulica 40T",
+    "capacidad": "40 Ton (x2)",
+    "moneda": "MXN",
+    "costoDia": 80306.0,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": ""
+  },
+  {
+    "proveedor": "Novasi",
+    "equipo": "MC 4080 Carrier",
+    "capacidad": "",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 234000.0,
+    "flete": ""
+  },
+  {
+    "proveedor": "Maverick Import.",
+    "equipo": "MC JAC 3.5 Dual",
+    "capacidad": "3.5 Ton",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": ""
+  },
+  {
+    "proveedor": "Merklift",
+    "equipo": "Montacargas",
+    "capacidad": "",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": ""
+  },
+  {
+    "proveedor": "Prov. arrendamiento",
+    "equipo": "MC 3 Ton gas LP",
+    "capacidad": "3 Ton",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 15991.0,
+    "flete": "48 meses"
+  },
+  {
+    "proveedor": "Prov. arrendamiento",
+    "equipo": "MC 5 Ton diesel",
+    "capacidad": "5 Ton",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 33995.0,
+    "flete": "48 meses"
+  },
+  {
+    "proveedor": "Prov. arrendamiento",
+    "equipo": "MC 7 Ton gas LP",
+    "capacidad": "7 Ton",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 38211.0,
+    "flete": "48 meses"
+  },
+  {
+    "proveedor": "RSM",
+    "equipo": "Alineacion maquinas",
+    "capacidad": "5 maquinas",
+    "moneda": "USD",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 14250.0,
+    "flete": ""
+  },
+  {
+    "proveedor": "GMX Seguros",
+    "equipo": "Seguro RC",
+    "capacidad": "$5M USD",
+    "moneda": "USD",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 1500.2,
+    "flete": ""
+  },
+  {
+    "proveedor": "GMX Seguros",
+    "equipo": "Seguro RC",
+    "capacidad": "$5M MXN",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": 9668.69,
+    "flete": ""
+  },
+  {
+    "proveedor": "Flexo Gruas",
+    "equipo": "Servicio de gruas",
+    "capacidad": "",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": ""
+  },
+  {
+    "proveedor": "INEQSA",
+    "equipo": "Catalogo MC",
+    "capacidad": "",
+    "moneda": "MXN",
+    "costoDia": null,
+    "costoSemana": null,
+    "costoMes": null,
+    "flete": ""
+  }
+];
+
+// ─────────────────────────────────────────────
+// 4. EPP — EQUIPO DE PROTECCIÓN PERSONAL
+// ─────────────────────────────────────────────
+const EPP_KITS = {
+  "kitBase": {
+    "nombre": "Kit Base (todo trabajador)",
+    "costoBase": 613.04,
+    "reposicion": 0.1,
+    "costoReal": 674.34,
+    "items": [
+      {
+        "producto": "Guante anticorte N5",
+        "precio": 75.28
+      },
+      {
+        "producto": "Lente claro DC24",
+        "precio": 19.72
+      },
+      {
+        "producto": "Tapón auditivo",
+        "precio": 9.16
+      },
+      {
+        "producto": "Casco matraca premium",
+        "precio": 140.24
+      },
+      {
+        "producto": "Chaleco brigadista",
+        "precio": 186.64
+      },
+      {
+        "producto": "Manga anticorte",
+        "precio": 182.0
+      }
+    ]
+  },
+  "soldador": {
+    "nombre": "EPP Soldador (adicional al kit base)",
+    "items": [
+      {
+        "producto": "Guante soldador Kevlar",
+        "precio": 148.48
+      },
+      {
+        "producto": "Mandil carnaza",
+        "precio": 126.32
+      },
+      {
+        "producto": "Polainas",
+        "precio": 126.32
+      }
+    ],
+    "costoAdicional": 401.12
+  },
+  "alturas": {
+    "nombre": "EPP Trabajo en Alturas (adicional al kit base)",
+    "items": [
+      {
+        "producto": "Arnés 3 aros",
+        "precio": 754.0
+      },
+      {
+        "producto": "Línea de vida",
+        "precio": 638.0
+      },
+      {
+        "producto": "Punto fijo",
+        "precio": 185.0
+      }
+    ],
+    "costoAdicional": 1577.0
+  },
+  "quimico": {
+    "nombre": "EPP Trabajo Químico (adicional al kit base)",
+    "items": [
+      {
+        "producto": "Overol Tyvek",
+        "precio": 75.28
+      },
+      {
+        "producto": "Guante nitrilo",
+        "precio": 53.24
+      },
+      {
+        "producto": "Goggles",
+        "precio": 82.24
+      }
+    ],
+    "costoAdicional": 210.76
+  }
+};
+
+// Función: calcular EPP total por personal
+function calcularEPP(trabajadores) {
+  // Kit base para todos
+  let total = trabajadores.length * EPP_KITS.kitBase.costoReal;
+  
+  trabajadores.forEach(t => {
+    // EPP adicional por puesto
+    if (t.puesto.toLowerCase().includes("soldador")) {
+      total += EPP_KITS.soldador.costoAdicional;
+    }
+    if (t.trabajoAlturas) {
+      total += EPP_KITS.alturas.costoAdicional;
+    }
+    if (t.trabajoQuimico) {
+      total += EPP_KITS.quimico.costoAdicional;
+    }
+  });
+  
+  return total;
+}
+
+// ─────────────────────────────────────────────
+// 5. CONSUMIBLES
+// ─────────────────────────────────────────────
+const CONSUMIBLES = {
+  "items": [
+    {
+      "producto": "Tanque oxígeno",
+      "precioUnitario": 460,
+      "unidad": "tanque"
+    },
+    {
+      "producto": "Tanque acetileno",
+      "precioUnitario": 1090,
+      "unidad": "tanque"
+    },
+    {
+      "producto": "Repuesto sierra sable",
+      "precioUnitario": 186.66,
+      "unidad": "pieza"
+    },
+    {
+      "producto": "Repuesto sierra cinta",
+      "precioUnitario": 205.25,
+      "unidad": "pieza"
+    },
+    {
+      "producto": "Disco corte 4.5",
+      "precioUnitario": 32,
+      "unidad": "pieza"
+    },
+    {
+      "producto": "Cincho",
+      "precioUnitario": 87,
+      "unidad": "bolsa"
+    },
+    {
+      "producto": "Gas montacargas",
+      "precioUnitario": 315,
+      "unidad": "tanque"
+    },
+    {
+      "producto": "Cinta aislar",
+      "precioUnitario": 25,
+      "unidad": "rollo"
+    },
+    {
+      "producto": "Emplaye",
+      "precioUnitario": 287,
+      "unidad": "rollo"
+    }
+  ],
+  "contingenciaConsumo": 0.1,
+  "nota": "Consumibles_real = consumibles × 1.10 (contingencia 10%)"
+};
+
+// Función: calcular consumibles con contingencia
+function calcularConsumibles(items) {
+  let subtotal = items.reduce((sum, item) => sum + (item.precioUnitario * (item.cantidad || 1)), 0);
+  return subtotal * (1 + CONSUMIBLES.contingenciaConsumo);
+}
+
+// ─────────────────────────────────────────────
+// 6. CONTINGENCIAS Y DESVIACIONES DE OBRA
+// ─────────────────────────────────────────────
+const CONTINGENCIAS = {
+  "categorias": [
+    {
+      "tipo": "Interferencias planta",
+      "metodo": "5-8% del costo directo",
+      "porcentajeMin": 0.05,
+      "porcentajeMax": 0.08
+    },
+    {
+      "tipo": "Seguridad",
+      "metodo": "$1,500 por trabajador",
+      "costoFijo": 1500,
+      "unidad": "por trabajador"
+    },
+    {
+      "tipo": "Logística",
+      "metodo": "10% del transporte",
+      "porcentaje": 0.1
+    },
+    {
+      "tipo": "Equipos",
+      "metodo": "5% de la renta",
+      "porcentaje": 0.05
+    },
+    {
+      "tipo": "Administración contingente",
+      "metodo": "3-5% del total",
+      "porcentajeMin": 0.03,
+      "porcentajeMax": 0.05
+    }
+  ],
+  "desviacionesObra": {
+    "tipos": [
+      {
+        "evento": "Área no liberada",
+        "descripcion": "Zona de trabajo bloqueada por cliente"
+      },
+      {
+        "evento": "Equipo no desconectado",
+        "descripcion": "Electricidad/aire/hidráulico activo"
+      },
+      {
+        "evento": "Cambio de secuencia",
+        "descripcion": "Cliente cambió orden de trabajo"
+      },
+      {
+        "evento": "Maniobra duplicada",
+        "descripcion": "Equipo movido dos veces"
+      },
+      {
+        "evento": "Espera logística",
+        "descripcion": "Transporte no disponible"
+      }
+    ],
+    "calculo": {
+      "costoPersonal": "salario_hora × horas_detenidas × personal_detenido",
+      "costoEquipo": "(costo_dia / 8) × horas_detenidas",
+      "costoTotal": "personal + equipos + transporte"
+    },
+    "narrativa": "El presente documento no constituye una solicitud de pago, sino un análisis técnico del costo real requerido para la correcta terminación del proyecto."
+  },
+  "parametrosFinancieros": {
+    "indirectos": 0.1,
+    "administracion": 0.05,
+    "utilidad": 0.1,
+    "contingencia": 0.1
+  }
+};
+
+// Función: calcular costo de desviación
+function calcularDesviacion(horasDetenidas, personalDetenido, salarioHora, equiposDetenidos) {
+  const costoPersonal = salarioHora * horasDetenidas * personalDetenido;
+  const costoEquipos = equiposDetenidos.reduce((sum, eq) => {
+    return sum + (eq.costoDia / 8) * horasDetenidas;
+  }, 0);
+  return {
+    costoPersonal,
+    costoEquipos,
+    costoTotal: costoPersonal + costoEquipos,
+    narrativa: CONTINGENCIAS.desviacionesObra.narrativa
+  };
+}
+
+// ─────────────────────────────────────────────
+// 7. PUESTOS DE REFERENCIA
+// ─────────────────────────────────────────────
+const PUESTOS_REFERENCIA = [
+  {
+    "puesto": "Mecánico",
+    "salarioSemanalRef": 10000
+  },
+  {
+    "puesto": "Soldador",
+    "salarioSemanalRef": 10000
+  },
+  {
+    "puesto": "Rigger",
+    "salarioSemanalRef": 10000
+  },
+  {
+    "puesto": "Supervisor",
+    "salarioSemanalRef": 14000
+  },
+  {
+    "puesto": "Maniobrista",
+    "salarioSemanalRef": 14000
+  },
+  {
+    "puesto": "Seguridad",
+    "salarioSemanalRef": 14000
+  }
+];
+
+// ─────────────────────────────────────────────
+// 8. VEHÍCULOS DE REFERENCIA
+// ─────────────────────────────────────────────
+const VEHICULOS_REFERENCIA = [
+  {
+    "vehiculo": "Suburban verde",
+    "costoSemanal": 1713
+  },
+  {
+    "vehiculo": "Suburban negra",
+    "costoSemanal": 1932
+  },
+  {
+    "vehiculo": "Urban blanca",
+    "costoSemanal": 5721
+  },
+  {
+    "vehiculo": "Ford 2015",
+    "costoSemanal": 3240
+  }
+];
+
+// ─────────────────────────────────────────────
+// 9. FUNCIONES DE CÁLCULO PRINCIPALES
+// ─────────────────────────────────────────────
+
+// Convertir USD a MXN
+function usdToMxn(usd) {
+  return usd * MICSA_CONFIG.tipoCambio;
+}
+
+// Obtener costo de equipo en MXN (automático)
+function costoEquipoMXN(equipo, periodo) {
+  // periodo: "dia", "semana", "mes"
+  let costo = 0;
+  if (periodo === "dia" && equipo.costoDia) costo = equipo.costoDia;
+  else if (periodo === "semana" && equipo.costoSemana) costo = equipo.costoSemana;
+  else if (periodo === "mes" && equipo.costoMes) costo = equipo.costoMes;
+  
+  if (equipo.moneda === "USD") {
+    costo = usdToMxn(costo);
+  }
+  return costo;
+}
+
+// Buscar equipos por tipo
+function buscarEquipos(tipo) {
+  return EQUIPOS_RENTA.filter(e => 
+    e.equipo.toLowerCase().includes(tipo.toLowerCase())
+  );
+}
+
+// Buscar equipos por proveedor
+function buscarPorProveedor(proveedor) {
+  return EQUIPOS_RENTA.filter(e => 
+    e.proveedor.toLowerCase().includes(proveedor.toLowerCase())
+  );
+}
+
+// Calcular resumen financiero del proyecto
+function calcularResumenProyecto(costoDirecto, consumibles, transporte, eppTotal, contingenciaTotal) {
+  const subtotal = costoDirecto + consumibles + transporte + eppTotal + contingenciaTotal;
+  const administracion = subtotal * PARAMETROS_FINANCIEROS.administracion;
+  const utilidad = (subtotal + administracion) * PARAMETROS_FINANCIEROS.utilidad;
+  const total = subtotal + administracion + utilidad;
+  
+  return {
+    costoDirecto,
+    consumibles,
+    transporte,
+    epp: eppTotal,
+    contingencias: contingenciaTotal,
+    subtotal,
+    administracion,
+    utilidad,
+    total,
+    margenUtilidad: (utilidad / total * 100).toFixed(1) + "%"
+  };
+}
+
+// ============================================================
+// FIN DE BASES DE DATOS COTIZADOR MICSA
+// ============================================================

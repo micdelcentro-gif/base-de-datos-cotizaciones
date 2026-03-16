@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MICSA — Sistema Integral de Proyectos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, 'DM Sans', 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        @media print {
+            body { background: white; }
+            .nav-container { display: none; }
+            .step { page-break-after: always; display: block !important; }
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #0a1628 0%, #1a2847 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-bottom: 3px solid #0066ff;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-header {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-header:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .header-project {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .header-project input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .header-project input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .header-project label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .phase-badges {
+            display: flex;
+            gap: 15px;
+        }
+
+        .phase-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .phase-badge.active {
+            background: #0066ff;
+            color: white;
+            border-color: #0066ff;
+        }
+
+        /* NAVIGATION */
+        .nav-container {
+            background: white;
+            padding: 20px 30px;
+            border-bottom: 1px solid #ddd;
+            overflow-x: auto;
+        }
+
+        .step-bar {
+            display: flex;
+            gap: 8px;
+            min-width: fit-content;
+        }
+
+        .step-btn {
+            min-width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .step-btn.cotizacion {
+            border-color: #0066ff;
+            color: #0066ff;
+        }
+
+        .step-btn.cotizacion.active {
+            background: #0066ff;
+            color: white;
+        }
+
+        .step-btn.gestion {
+            border-color: #15803d;
+            color: #15803d;
+        }
+
+        .step-btn.gestion.active {
+            background: #15803d;
+            color: white;
+        }
+
+        /* MAIN CONTENT */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 30px;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .step-title {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #0a1628;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1f2937;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #f3f4f6;
+            padding-bottom: 10px;
+        }
+
+        /* FORMS */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="email"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="email"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #0066ff;
+            box-shadow: 0 0 0 3px rgba(0,102,255,0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* TABLES */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #d1d5db;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        td input {
+            width: 100%;
+            padding: 6px 8px;
+            font-size: 13px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary {
+            background: #0066ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052cc;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* STEP NAVIGATION */
+        .step-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .step-nav .btn {
+            flex: 1;
+        }
+
+        /* KPI CARDS */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0a1628;
+        }
+
+        /* ALERT/STATUS */
+        .alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .alert-warning {
+            background: #fef08a;
+            color: #854d0e;
+            border: 1px solid #facc15;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        /* CHARTS */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 25px;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+        .chart-item-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1f2937;
+        }
+
+        /* ACCORDION */
+        .accordion {
+            margin-bottom: 15px;
+        }
+
+        .accordion-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 15px;
+            background: #f9fafb;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: #f3f4f6;
+        }
+
+        .accordion-toggle {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+
+        .accordion-item.expanded .accordion-toggle {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .accordion-item.expanded .accordion-content {
+            display: block;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container { padding: 0 15px; }
+            .header-top { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header-project { flex-direction: column; gap: 10px; }
+            .form-row { grid-template-columns: 1fr; }
+            .charts-row { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: 1fr; }
+            .step-nav { flex-direction: column; }
+            .step-nav .btn { width: 100%; }
+        }
+
+        /* PRINT */
+        @media print {
+            .container { max-width: 100%; margin: 0; padding: 0; }
+            .card { box-shadow: none; page-break-inside: avoid; }
+            .step-nav { display: none; }
+            input, select, textarea { border: 1px solid #999; }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-top">
+            <div class="header-title">MICSA — Sistema Integral de Proyectos</div>
+            <div class="header-buttons">
+                <button class="btn-header" onclick="imprimirSistema()">🖨️ Imprimir</button>
+                <button class="btn-header" onclick="exportarDatos()">💾 Guardar</button>
+            </div>
+        </div>
+        <div class="header-project">
+            <label>Proyecto: <input type="text" id="projectName" placeholder="Nombre del Proyecto"></label>
+            <label>Cliente: <input type="text" id="clientName" placeholder="Nombre del Cliente"></label>
+        </div>
+        <div class="header-top">
+            <div class="phase-badges">
+                <div class="phase-badge" id="phaseCotizacion">Cotización</div>
+                <div class="phase-badge" id="phaseGestion">Gestión</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="nav-container">
+        <div class="step-bar">
+            <button class="step-btn cotizacion active" onclick="irAStep(1)" title="Alcance">1</button>
+            <button class="step-btn cotizacion" onclick="irAStep(2)" title="Personal">2</button>
+            <button class="step-btn cotizacion" onclick="irAStep(3)" title="Costos Operativos">3</button>
+            <button class="step-btn cotizacion" onclick="irAStep(4)" title="Equipos y Admin">4</button>
+            <button class="step-btn cotizacion" onclick="irAStep(5)" title="Resumen Cotización">5</button>
+            <button class="step-btn gestion" onclick="irAStep(6)" title="Desglose Presupuesto">6</button>
+            <button class="step-btn gestion" onclick="irAStep(7)" title="Control Semanal">7</button>
+            <button class="step-btn gestion" onclick="irAStep(8)" title="Nómina">8</button>
+            <button class="step-btn gestion" onclick="irAStep(9)" title="Costos Detalle">9</button>
+            <button class="step-btn gestion" onclick="irAStep(10)" title="Mi Utilidad">10</button>
+            <button class="step-btn gestion" onclick="irAStep(11)" title="Presupuesto vs Real">11</button>
+            <button class="step-btn gestion" onclick="irAStep(12)" title="Dashboard">12</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <!-- STEP 1: ALCANCE -->
+        <div class="step active" id="step1">
+            <div class="step-title">1. Alcance del Proyecto</div>
+
+            <div class="card">
+                <div class="card-title">Información General</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Número de Cotización</label>
+                        <input type="text" id="quotationNumber" placeholder="Ej: MIC-2026-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Ubicación</label>
+                        <input type="text" id="location" placeholder="Ubicación del Proyecto">
+                    </div>
+                    <div class="form-group">
+                        <label>Planta/Sitio</label>
+                        <input type="text" id="plant" placeholder="Nombre de la Planta">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Contacto</label>
+                        <input type="text" id="contact" placeholder="Nombre del Contacto">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="contactEmail" placeholder="email@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Referencia</label>
+                        <input type="text" id="reference" placeholder="Referencia Interna">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Descripción de Actividades</div>
+                <div class="form-group">
+                    <label>Descripción Detallada</label>
+                    <textarea id="activityDescription" placeholder="Describa las actividades principales del proyecto..."></textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Alcances Incluidos</div>
+                <div id="scopeItemsContainer"></div>
+                <button class="btn btn-secondary" onclick="agregarScopeItem()">+ Agregar Alcance</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Exclusiones</div>
+                <div id="exclusionsContainer"></div>
+                <button class="btn btn-secondary" onclick="agregarExclusion()">+ Agregar Exclusión</button>
+            </div>
+
+            <div class="card">
+                <div class="form-group">
+                    <label>Moneda</label>
+                    <select id="currency">
+                        <option value="MXN">MXN - Pesos Mexicanos</option>
+                        <option value="USD">USD - Dólares</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(1)" disabled>← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(2)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: PERSONAL -->
+        <div class="step" id="step2">
+            <div class="step-title">2. Personal y Etapas</div>
+
+            <div class="card">
+                <div class="card-title">Referencia de Salarios</div>
+                <div class="table-wrapper">
+                    <table>
+                        <tr>
+                            <th>Puesto</th>
+                            <th>Salario Semanal</th>
+                        </tr>
+                        <tr>
+                            <td>Mecánico</td>
+                            <td>$10,000.00</td>
+                        </tr>
+                        <tr>
+                            <td>Soldador</td>
+                            <td>$10,000.00</td>
+                        </tr>
+                        <tr>
+                            <td>Rigger</td>
+                            <td>$10,000.00</td>
+                        </tr>
+                        <tr>
+                            <td>Supervisor</td>
+                            <td>$14,000.00</td>
+                        </tr>
+                        <tr>
+                            <td>Maniobrista</td>
+                            <td>$14,000.00</td>
+                        </tr>
+                        <tr>
+                            <td>Seguridad</td>
+                            <td>$14,000.00</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div id="stagesContainer"></div>
+
+            <button class="btn btn-secondary" onclick="agregarEtapa()">+ Agregar Etapa</button>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(1)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(3)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: COSTOS OPERATIVOS -->
+        <div class="step" id="step3">
+            <div class="step-title">3. Costos Operativos</div>
+
+            <div class="card">
+                <div class="card-title">Parámetros de Costos</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Viáticos por Persona/Semana</label>
+                        <input type="number" id="viaticos" value="1200" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Hotel por Noche</label>
+                        <input type="number" id="hotelPrecio" value="1200" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Personas por Habitación</label>
+                        <input type="number" id="personasPorHabitacion" value="2" step="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Traslados (Total)</label>
+                        <input type="number" id="traslados" value="12000" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label>EPP (Por Persona)</label>
+                        <input type="number" id="epp" value="674.34" step="10">
+                    </div>
+                    <div class="form-group">
+                        <label>DC3 (Capacitación)</label>
+                        <input type="number" id="dc3" value="4200" step="100">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Examen Médico</label>
+                        <input type="number" id="examenMedico" value="16100" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Herramienta (Inicial)</label>
+                        <input type="number" id="herramientaCosto" value="26976" step="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(2)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(4)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: EQUIPOS Y ADMIN -->
+        <div class="step" id="step4">
+            <div class="step-title">4. Equipos y Administrativo</div>
+
+            <div class="card">
+                <div class="card-title">Catálogo de Equipos</div>
+                <div class="form-group">
+                    <label>Agregar Equipo Predefinido</label>
+                    <select id="equipoPreset" onchange="agregarEquipoDelCatalogo()">
+                        <option value="">-- Seleccionar Equipo --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Equipos Rentados</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Periodo</th>
+                                <th>Moneda</th>
+                                <th>Semanas</th>
+                                <th>Total</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equiposTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-secondary" onclick="agregarEquipoCustom()">+ Equipo Personalizado</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Costos Administrativos</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Porcentaje Admin (%)</label>
+                        <input type="number" id="adminPercent" value="5" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Comisión Cliente (%)</label>
+                        <input type="number" id="comisionPercent" value="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Seguro RC</label>
+                        <input type="number" id="rcSeguro" value="15880" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Ganancia Deseada (%)</label>
+                        <input type="number" id="utilidadPercent" value="20" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(3)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(5)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 5: RESUMEN COTIZACIÓN -->
+        <div class="step" id="step5">
+            <div class="step-title">5. Resumen de Cotización</div>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Costo Directo</div>
+                    <div class="kpi-value" id="kpiCostoDirecto">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Gastos Indirectos</div>
+                    <div class="kpi-value" id="kpiGastosIndirectos">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Subtotal</div>
+                    <div class="kpi-value" id="kpiSubtotal">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">IVA 16%</div>
+                    <div class="kpi-value" id="kpiIVA">$0.00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Desglose de Costos</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Concepto</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="kpi-row">
+                    <div class="kpi-card">
+                        <div class="kpi-label">TOTAL VENTA (c/ IVA)</div>
+                        <div class="kpi-value" id="kpiPrecioVenta" style="color: #15803d; font-size: 32px;">$0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(4)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(6)">Continuar a Gestión →</button>
+            </div>
+        </div>
+
+        <!-- STEP 6: DESGLOSE PRESUPUESTO -->
+        <div class="step" id="step6">
+            <div class="step-title">6. Desglose de Presupuesto</div>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total OC</div>
+                    <div class="kpi-value" id="kpi6TotalOC">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Costo Real</div>
+                    <div class="kpi-value" id="kpi6TotalCosto">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Utilidad</div>
+                    <div class="kpi-value" id="kpi6Utilidad">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Margen %</div>
+                    <div class="kpi-value" id="kpi6Margen">0%</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Parámetros Financieros</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Gastos Indirectos (%)</label>
+                        <input type="number" id="param6Indirectos" value="10" step="0.1" onchange="actualizarStep6()">
+                    </div>
+                    <div class="form-group">
+                        <label>Administrativo (%)</label>
+                        <input type="number" id="param6Admin" value="5" step="0.1" onchange="actualizarStep6()">
+                    </div>
+                    <div class="form-group">
+                        <label>Utilidad Esperada (%)</label>
+                        <input type="number" id="param6Utilidad" value="10" step="0.1" onchange="actualizarStep6()">
+                    </div>
+                    <div class="form-group">
+                        <label>Contingencia (%)</label>
+                        <input type="number" id="param6Contingencia" value="10" step="0.1" onchange="actualizarStep6()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Presupuesto por Rubro</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rubro</th>
+                                <th>Precio Venta</th>
+                                <th>Mi Costo Real</th>
+                                <th>Ganancia</th>
+                                <th>Margen %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="desglosePubTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(5)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(7)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 7: CONTROL SEMANAL -->
+        <div class="step" id="step7">
+            <div class="step-title">7. Control Semanal</div>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Costo Planeado</div>
+                    <div class="kpi-value" id="kpi7Costoplan">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Costo Real Acumulado</div>
+                    <div class="kpi-value" id="kpi7CostoReal">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Desviación</div>
+                    <div class="kpi-value" id="kpi7Desviacion">$0.00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Seguimiento Semanal</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Semana</th>
+                                <th>Pers Plan</th>
+                                <th>Pers Real</th>
+                                <th>Costo Plan</th>
+                                <th>Costo Real</th>
+                                <th>Desviación</th>
+                                <th>Avance %</th>
+                                <th>Acumulado</th>
+                                <th>Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="controlSemanalBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="chartControlSemanal"></canvas>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(6)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(8)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 8: NÓMINA -->
+        <div class="step" id="step8">
+            <div class="step-title">8. Nómina de Personal</div>
+
+            <div class="card">
+                <div class="card-title">Empleados por Semana</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead id="nominaHeader">
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Puesto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nominaBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-secondary" onclick="agregarEmpleado()">+ Agregar Empleado</button>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(7)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(9)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 9: COSTOS DETALLE -->
+        <div class="step" id="step9">
+            <div class="step-title">9. Costos Detalle</div>
+
+            <div class="accordion" id="costosDetalleAccordion">
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(8)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(10)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 10: MI UTILIDAD -->
+        <div class="step" id="step10">
+            <div class="step-title">10. Mi Utilidad</div>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Precio Venta</div>
+                    <div class="kpi-value" id="kpi10PrecioVenta">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Costo Real</div>
+                    <div class="kpi-value" id="kpi10CostoReal">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label" style="font-size: 14px;">Mi Ganancia Neta</div>
+                    <div class="kpi-value" id="kpi10Ganancia" style="color: #15803d;">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Margen Total %</div>
+                    <div class="kpi-value" id="kpi10Margen">0%</div>
+                </div>
+            </div>
+
+            <div class="chart-item">
+                <div class="chart-item-title">Ganancia por Rubro</div>
+                <div class="chart-container">
+                    <canvas id="chartUtilidad"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Detalle de Utilidad</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rubro</th>
+                                <th>Precio Venta</th>
+                                <th>Costo Real</th>
+                                <th>Mi Ganancia</th>
+                                <th>Margen %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="utilidadTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(9)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(11)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 11: PRESUPUESTO VS REAL -->
+        <div class="step" id="step11">
+            <div class="step-title">11. Presupuesto vs Real</div>
+
+            <div class="card">
+                <div class="card-title">Comparativa General</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rubro</th>
+                                <th>Presupuesto</th>
+                                <th>Real</th>
+                                <th>Diferencia</th>
+                                <th>Estado</th>
+                                <th>% Variación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="presupuestoRealBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="chart-item">
+                    <div class="chart-item-title">Presupuesto vs Real (Barras)</div>
+                    <div class="chart-container">
+                        <canvas id="chartPresupuestoVsReal"></canvas>
+                    </div>
+                </div>
+                <div class="chart-item">
+                    <div class="chart-item-title">Desviación por Rubro</div>
+                    <div class="chart-container">
+                        <canvas id="chartDesviacion"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(10)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(12)">Siguiente →</button>
+            </div>
+        </div>
+
+        <!-- STEP 12: DASHBOARD -->
+        <div class="step" id="step12">
+            <div class="step-title">12. Dashboard General</div>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Orden de Compra</div>
+                    <div class="kpi-value" id="kpi12OC">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Costo Total</div>
+                    <div class="kpi-value" id="kpi12Costo">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Utilidad Neta</div>
+                    <div class="kpi-value" id="kpi12Utilidad">$0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Margen %</div>
+                    <div class="kpi-value" id="kpi12Margen">0%</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Avance %</div>
+                    <div class="kpi-value" id="kpi12Avance">0%</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Semanas Totales</div>
+                    <div class="kpi-value" id="kpi12Semanas">0</div>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="chart-item">
+                    <div class="chart-item-title">Composición de Costos</div>
+                    <div class="chart-container">
+                        <canvas id="chartComposicion"></canvas>
+                    </div>
+                </div>
+                <div class="chart-item">
+                    <div class="chart-item-title">Precio de Venta vs Costo</div>
+                    <div class="chart-container">
+                        <canvas id="chartWaterfall"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Resumen Ejecutivo</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Concepto</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardSummaryBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-secondary" onclick="irAStep(11)">← Anterior</button>
+                <button class="btn btn-primary" onclick="irAStep(12)" disabled>Fin del Sistema</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATA CONSTANTS
+        const EQUIPO_PRESETS = [
+            { nombre: "Bellavista - Montacargas 2,500kg", precio: 467, periodo: "sem", moneda: "USD" },
+            { nombre: "Bellavista - Montacargas 3,000kg", precio: 648, periodo: "sem", moneda: "USD" },
+            { nombre: "Bellavista - Montacargas 3,500kg", precio: 815, periodo: "sem", moneda: "USD" },
+            { nombre: "BMR - Hangcha CPCD50 5T", precio: 2469, periodo: "mes", moneda: "USD" },
+            { nombre: "Rigging Industry - Versa 40-60T", precio: 150000, periodo: "sem", moneda: "MXN" },
+            { nombre: "Rigging Industry - MC 60-80T", precio: 38000, periodo: "dia", moneda: "MXN" },
+            { nombre: "Iron Rentals - Manlift 45ft", precio: 18900, periodo: "sem", moneda: "MXN" },
+            { nombre: "SEYSO Norte - MC Hyster 7T", precio: 28000, periodo: "sem", moneda: "MXN" },
+            { nombre: "SEYSO Norte - MC Doosan 9T", precio: 45500, periodo: "sem", moneda: "MXN" },
+            { nombre: "CIASA - Gantry 400T", precio: 14220, periodo: "sem", moneda: "USD" },
+            { nombre: "GYMBSA - Gantry 500T", precio: 20120, periodo: "sem", moneda: "USD" },
+            { nombre: "GMX Seguros - Seguro RC $5M USD", precio: 1500, periodo: "mes", moneda: "USD" },
+        ];
+
+        const PUESTOS_REF = [
+            { puesto: "Mecanico", salario: 10000 },
+            { puesto: "Soldador", salario: 10000 },
+            { puesto: "Rigger", salario: 10000 },
+            { puesto: "Supervisor", salario: 14000 },
+            { puesto: "Maniobrista", salario: 14000 },
+            { puesto: "Seguridad", salario: 14000 }
+        ];
+
+        const HERRAMIENTA_CATALOGO = [
+            { nombre: "Arco segueta", precio: 318.96 },
+            { nombre: "Llave Stillson", precio: 412.06 },
+            { nombre: "Llave ajustable 10 pulg", precio: 370.68 },
+            { nombre: "Pinza mecanica", precio: 241.68 },
+            { nombre: "Juego llaves mixtas", precio: 862.00 },
+            { nombre: "Desarmador plano", precio: 77.72 },
+            { nombre: "Desarmador cruz", precio: 77.72 },
+            { nombre: "Martillo bola", precio: 228.00 },
+            { nombre: "Cincel", precio: 79.60 },
+            { nombre: "Flexometro 8m", precio: 206.48 },
+            { nombre: "Nivel 24 pulg", precio: 412.06 },
+            { nombre: "Escuadra combinada", precio: 398.00 },
+            { nombre: "Esmeriladora 4.5 pulg", precio: 1389.20 },
+            { nombre: "Taladro percutor", precio: 1741.00 },
+            { nombre: "Sierra sable", precio: 3877.00 },
+            { nombre: "Rotomartillo SDS", precio: 2465.00 },
+            { nombre: "Extension electrica 30m", precio: 590.00 },
+            { nombre: "Cadena 3/8 x 6m", precio: 1296.00 },
+            { nombre: "Grillete 3/4", precio: 179.00 },
+            { nombre: "Eslinga 2 x 3m", precio: 392.00 }
+        ];
+
+        const CONSUMIBLES_CATALOGO = [
+            { producto: "Tanque oxigeno", precio: 460, unidad: "tanque" },
+            { producto: "Tanque acetileno", precio: 1090, unidad: "tanque" },
+            { producto: "Repuesto sierra sable", precio: 186.66, unidad: "pieza" },
+            { producto: "Disco corte 4.5 pulg", precio: 32, unidad: "pieza" },
+            { producto: "Cincho", precio: 87, unidad: "bolsa" },
+            { producto: "Gas montacargas", precio: 315, unidad: "tanque" },
+            { producto: "Cinta aislar", precio: 25, unidad: "rollo" },
+            { producto: "Emplaye", precio: 287, unidad: "rollo" }
+        ];
+
+        // GLOBAL STATE
+        let appData = {
+            project: { name: '', client: '', quotation: '', location: '', plant: '', contact: '', email: '', reference: '', activity: '' },
+            scopes: [{ id: 1, text: '' }],
+            exclusions: [{ id: 1, text: '' }],
+            currency: 'MXN',
+            stages: [{ id: 1, name: 'Etapa 1', weeks: 4, hoursPerDay: 8, personnel: [{ id: 1, puesto: 'Mecanico', cantidad: 1, escenario: 4, pagoSemanal: 10000 }] }],
+            operationalCosts: { viaticos: 1200, hotel: 1200, personas: 2, traslados: 12000, epp: 674.34, dc3: 4200, examen: 16100, herramienta: 26976 },
+            equipos: [],
+            admin: 5,
+            comision: 0,
+            rcSeguro: 15880,
+            utilidad: 20,
+            desglose: {},
+            empleados: [],
+            herramientas: [],
+            consumibles: [],
+            nominaData: {}
+        };
+
+        let charts = {};
+
+        // INIT
+        window.addEventListener('DOMContentLoaded', () => {
+            cargarDatos();
+            inicializarUI();
+            actualizarTodosSinFormatos();
+        });
+
+        function cargarDatos() {
+            const saved = localStorage.getItem('micsa_sistema_data');
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                } catch(e) {
+                    console.error('Error loading data', e);
+                }
+            }
+            actualizarUIInputs();
+        }
+
+        function guardarDatos() {
+            localStorage.setItem('micsa_sistema_data', JSON.stringify(appData));
+        }
+
+        function actualizarUIInputs() {
+            document.getElementById('projectName').value = appData.project.name;
+            document.getElementById('clientName').value = appData.project.client;
+            document.getElementById('quotationNumber').value = appData.project.quotation;
+            document.getElementById('location').value = appData.project.location;
+            document.getElementById('plant').value = appData.project.plant;
+            document.getElementById('contact').value = appData.project.contact;
+            document.getElementById('contactEmail').value = appData.project.email;
+            document.getElementById('reference').value = appData.project.reference;
+            document.getElementById('activityDescription').value = appData.project.activity;
+            document.getElementById('currency').value = appData.currency;
+            document.getElementById('viaticos').value = appData.operationalCosts.viaticos;
+            document.getElementById('hotelPrecio').value = appData.operationalCosts.hotel;
+            document.getElementById('personasPorHabitacion').value = appData.operationalCosts.personas;
+            document.getElementById('traslados').value = appData.operationalCosts.traslados;
+            document.getElementById('epp').value = appData.operationalCosts.epp;
+            document.getElementById('dc3').value = appData.operationalCosts.dc3;
+            document.getElementById('examenMedico').value = appData.operationalCosts.examen;
+            document.getElementById('herramientaCosto').value = appData.operationalCosts.herramienta;
+            document.getElementById('adminPercent').value = appData.admin;
+            document.getElementById('comisionPercent').value = appData.comision;
+            document.getElementById('rcSeguro').value = appData.rcSeguro;
+            document.getElementById('utilidadPercent').value = appData.utilidad;
+            inicializarStep2UI();
+            inicializarStep4UI();
+        }
+
+        function inicializarUI() {
+            llenarEquipoPreset();
+            renderScopeItems();
+            renderExclusions();
+            renderStages();
+            renderEquiposTable();
+        }
+
+        function guardarCampo(campo, valor, subCampo = null) {
+            if (subCampo) {
+                if (campo === 'project') appData.project[subCampo] = valor;
+                else if (campo === 'operationalCosts') appData.operationalCosts[subCampo] = parseFloat(valor) || 0;
+            } else {
+                appData[campo] = valor;
+            }
+            guardarDatos();
+            actualizarTodosSinFormatos();
+        }
+
+        // STEP 1 FUNCTIONS
+        function agregarScopeItem() {
+            const id = Math.max(...appData.scopes.map(s => s.id), 0) + 1;
+            appData.scopes.push({ id, text: '' });
+            renderScopeItems();
+        }
+
+        function renderScopeItems() {
+            const container = document.getElementById('scopeItemsContainer');
+            container.innerHTML = appData.scopes.map((item, idx) => `
+                <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <input type="text" value="${item.text}" placeholder="Describa el alcance incluido..." style="flex:1"
+                        onchange="appData.scopes[${idx}].text = this.value; guardarDatos(); actualizarTodosSinFormatos();">
+                    <button class="btn btn-danger btn-small" onclick="appData.scopes.splice(${idx}, 1); renderScopeItems(); guardarDatos(); actualizarTodosSinFormatos();">Eliminar</button>
+                </div>
+            `).join('');
+        }
+
+        function agregarExclusion() {
+            const id = Math.max(...appData.exclusions.map(e => e.id), 0) + 1;
+            appData.exclusions.push({ id, text: '' });
+            renderExclusions();
+        }
+
+        function renderExclusions() {
+            const container = document.getElementById('exclusionsContainer');
+            container.innerHTML = appData.exclusions.map((item, idx) => `
+                <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <input type="text" value="${item.text}" placeholder="Describa la exclusión..." style="flex:1"
+                        onchange="appData.exclusions[${idx}].text = this.value; guardarDatos(); actualizarTodosSinFormatos();">
+                    <button class="btn btn-danger btn-small" onclick="appData.exclusions.splice(${idx}, 1); renderExclusions(); guardarDatos(); actualizarTodosSinFormatos();">Eliminar</button>
+                </div>
+            `).join('');
+        }
+
+        // STEP 2 FUNCTIONS
+        function inicializarStep2UI() {
+            renderStages();
+        }
+
+        function renderStages() {
+            const container = document.getElementById('stagesContainer');
+            container.innerHTML = appData.stages.map((stage, stageIdx) => `
+                <div class="card">
+                    <div class="card-title">Etapa ${stageIdx + 1}: ${stage.name}</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre de la Etapa</label>
+                            <input type="text" value="${stage.name}" placeholder="Nombre de la Etapa"
+                                onchange="appData.stages[${stageIdx}].name = this.value; guardarDatos(); renderStages();">
+                        </div>
+                        <div class="form-group">
+                            <label>Semanas</label>
+                            <input type="number" value="${stage.weeks}" step="1" min="1"
+                                onchange="appData.stages[${stageIdx}].weeks = parseInt(this.value) || 1; guardarDatos(); actualizarTodosSinFormatos();">
+                        </div>
+                        <div class="form-group">
+                            <label>Horas por Día</label>
+                            <input type="number" value="${stage.hoursPerDay}" step="1" min="1"
+                                onchange="appData.stages[${stageIdx}].hoursPerDay = parseInt(this.value) || 8; guardarDatos();">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Puesto</th>
+                                    <th>Cantidad</th>
+                                    <th>Escenario (Sem)</th>
+                                    <th>Pago Semanal</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${stage.personnel.map((p, pIdx) => `
+                                    <tr>
+                                        <td>
+                                            <select onchange="appData.stages[${stageIdx}].personnel[${pIdx}].puesto = this.value; guardarDatos(); actualizarTodosSinFormatos();">
+                                                ${PUESTOS_REF.map(pr => `<option value="${pr.puesto}" ${p.puesto === pr.puesto ? 'selected' : ''}>${pr.puesto}</option>`).join('')}
+                                            </select>
+                                        </td>
+                                        <td><input type="number" value="${p.cantidad}" min="1" step="1"
+                                            onchange="appData.stages[${stageIdx}].personnel[${pIdx}].cantidad = parseInt(this.value) || 1; guardarDatos(); actualizarTodosSinFormatos();"></td>
+                                        <td><input type="number" value="${p.escenario}" min="1" step="1"
+                                            onchange="appData.stages[${stageIdx}].personnel[${pIdx}].escenario = parseInt(this.value) || 1; guardarDatos(); actualizarTodosSinFormatos();"></td>
+                                        <td><input type="number" value="${p.pagoSemanal}" min="0" step="100"
+                                            onchange="appData.stages[${stageIdx}].personnel[${pIdx}].pagoSemanal = parseFloat(this.value) || 0; guardarDatos(); actualizarTodosSinFormatos();"></td>
+                                        <td><button class="btn btn-danger btn-small" onclick="appData.stages[${stageIdx}].personnel.splice(${pIdx}, 1); renderStages(); guardarDatos(); actualizarTodosSinFormatos();">Eliminar</button></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-secondary btn-small" onclick="appData.stages[${stageIdx}].personnel.push({id: Math.max(...appData.stages[${stageIdx}].personnel.map(x => x.id || 0), 0) + 1, puesto: 'Mecanico', cantidad: 1, escenario: 1, pagoSemanal: 10000}); renderStages(); guardarDatos();">+ Personal</button>
+                    <button class="btn btn-danger btn-small" onclick="appData.stages.splice(${stageIdx}, 1); renderStages(); guardarDatos(); actualizarTodosSinFormatos();">Eliminar Etapa</button>
+                </div>
+            `).join('');
+        }
+
+        function agregarEtapa() {
+            appData.stages.push({ id: Math.max(...appData.stages.map(s => s.id || 0), 0) + 1, name: `Etapa ${appData.stages.length + 1}`, weeks: 4, hoursPerDay: 8, personnel: [{ id: 1, puesto: 'Mecanico', cantidad: 1, escenario: 4, pagoSemanal: 10000 }] });
+            renderStages();
+            guardarDatos();
+            actualizarTodosSinFormatos();
+        }
+
+        // STEP 4 FUNCTIONS
+        function inicializarStep4UI() {
+            llenarEquipoPreset();
+            renderEquiposTable();
+        }
+
+        function llenarEquipoPreset() {
+            const select = document.getElementById('equipoPreset');
+            select.innerHTML = '<option value="">-- Seleccionar Equipo --</option>' +
+                EQUIPO_PRESETS.map((e, i) => `<option value="${i}">${e.nombre}</option>`).join('');
+        }
+
+        function agregarEquipoDelCatalogo() {
+            const select = document.getElementById('equipoPreset');
+            const idx = select.value;
+            if (idx === '') return;
+            const preset = EQUIPO_PRESETS[parseInt(idx)];
+            appData.equipos.push({
+                id: Math.max(...appData.equipos.map(e => e.id || 0), 0) + 1,
+                nombre: preset.nombre,
+                precio: preset.precio,
+                periodo: preset.periodo,
+                moneda: preset.moneda,
+                semanas: calcularTotalSemanas()
+            });
+            renderEquiposTable();
+            guardarDatos();
+            actualizarTodosSinFormatos();
+            select.value = '';
+        }
+
+        function agregarEquipoCustom() {
+            appData.equipos.push({
+                id: Math.max(...appData.equipos.map(e => e.id || 0), 0) + 1,
+                nombre: 'Nuevo Equipo',
+                precio: 0,
+                periodo: 'sem',
+                moneda: 'MXN',
+                semanas: calcularTotalSemanas()
+            });
+            renderEquiposTable();
+            guardarDatos();
+        }
+
+        function renderEquiposTable() {
+            const tbody = document.getElementById('equiposTableBody');
+            tbody.innerHTML = appData.equipos.map((e, idx) => {
+                let total = e.precio;
+                if (e.periodo === 'dia') total *= 5 * e.semanas;
+                else if (e.periodo === 'sem') total *= e.semanas;
+                else if (e.periodo === 'mes') total *= Math.ceil(e.semanas / 4);
+                return `
+                    <tr>
+                        <td><input type="text" value="${e.nombre}"
+                            onchange="appData.equipos[${idx}].nombre = this.value; guardarDatos(); actualizarTodosSinFormatos();"></td>
+                        <td><input type="number" value="${e.precio}" step="100"
+                            onchange="appData.equipos[${idx}].precio = parseFloat(this.value) || 0; guardarDatos(); actualizarTodosSinFormatos();"></td>
+                        <td><select onchange="appData.equipos[${idx}].periodo = this.value; guardarDatos(); actualizarTodosSinFormatos();">
+                            <option value="dia" ${e.periodo === 'dia' ? 'selected' : ''}>Día</option>
+                            <option value="sem" ${e.periodo === 'sem' ? 'selected' : ''}>Semana</option>
+                            <option value="mes" ${e.periodo === 'mes' ? 'selected' : ''}>Mes</option>
+                        </select></td>
+                        <td><select onchange="appData.equipos[${idx}].moneda = this.value; guardarDatos(); actualizarTodosSinFormatos();">
+                            <option value="MXN" ${e.moneda === 'MXN' ? 'selected' : ''}>MXN</option>
+                            <option value="USD" ${e.moneda === 'USD' ? 'selected' : ''}>USD</option>
+                        </select></td>
+                        <td><input type="number" value="${e.semanas}" step="1" min="1"
+                            onchange="appData.equipos[${idx}].semanas = parseInt(this.value) || 1; guardarDatos(); actualizarTodosSinFormatos();"></td>
+                        <td>${formatoCurrency(total)}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="appData.equipos.splice(${idx}, 1); renderEquiposTable(); guardarDatos(); actualizarTodosSinFormatos();">Eliminar</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // CALCULATIONS
+        function calcularTotalSemanas() {
+            return appData.stages.reduce((sum, s) => sum + (s.weeks || 0), 0) || 1;
+        }
+
+        function calcularCostoDirecto() {
+            let nómina = 0;
+            appData.stages.forEach(stage => {
+                stage.personnel.forEach(p => {
+                    nómina += p.cantidad * p.escenario * p.pagoSemanal;
+                });
+            });
+
+            const totalPersonas = appData.stages.reduce((sum, s) => {
+                return sum + s.personnel.reduce((psum, p) => psum + p.cantidad, 0);
+            }, 0);
+
+            const totalSemanas = calcularTotalSemanas();
+            const nochesTotal = (totalSemanas * 5) / appData.operationalCosts.personas;
+
+            let operacionales = 0;
+            operacionales += totalPersonas * totalSemanas * appData.operationalCosts.viaticos;
+            operacionales += nochesTotal * appData.operationalCosts.hotel;
+            operacionales += appData.operationalCosts.traslados;
+            operacionales += totalPersonas * appData.operationalCosts.epp;
+            operacionales += totalPersonas * appData.operationalCosts.dc3;
+            operacionales += totalPersonas * appData.operationalCosts.examen;
+            operacionales += appData.operationalCosts.herramienta;
+
+            let equipos = 0;
+            appData.equipos.forEach(e => {
+                let costo = e.precio;
+                if (e.periodo === 'dia') costo *= 5 * e.semanas;
+                else if (e.periodo === 'sem') costo *= e.semanas;
+                else if (e.periodo === 'mes') costo *= Math.ceil(e.semanas / 4);
+                if (e.moneda === 'USD') costo *= 17; // tipo de cambio aproximado
+                equipos += costo;
+            });
+
+            const rc = appData.rcSeguro;
+            const costoDirecto = nómina + operacionales + equipos + rc;
+            return costoDirecto;
+        }
+
+        function calcularPrecioVenta() {
+            const costoDirecto = calcularCostoDirecto();
+            const indirectos = costoDirecto * (appData.admin / 100);
+            const comision = costoDirecto * (appData.comision / 100);
+            const subtotal = costoDirecto + indirectos + comision;
+            const iva = subtotal * 0.16;
+            return subtotal + iva;
+        }
+
+        function actualizarTodosSinFormatos() {
+            actualizarStep5();
+            actualizarStep6();
+            actualizarStep7();
+            actualizarStep8();
+            actualizarStep9();
+            actualizarStep10();
+            actualizarStep11();
+            actualizarStep12();
+            actualizarPhaseIndicator();
+        }
+
+        function actualizarPhaseIndicator() {
+            const currentStep = document.querySelector('.step.active').id.replace('step', '');
+            const cotizacionBadge = document.getElementById('phaseCotizacion');
+            const gestionBadge = document.getElementById('phaseGestion');
+
+            if (currentStep <= 5) {
+                cotizacionBadge.classList.add('active');
+                gestionBadge.classList.remove('active');
+            } else {
+                cotizacionBadge.classList.remove('active');
+                gestionBadge.classList.add('active');
+            }
+        }
+
+        // STEP 5
+        function actualizarStep5() {
+            const costoDirecto = calcularCostoDirecto();
+            const indirectos = costoDirecto * (appData.admin / 100);
+            const comision = costoDirecto * (appData.comision / 100);
+            const subtotal = costoDirecto + indirectos + comision;
+            const iva = subtotal * 0.16;
+            const precioVenta = subtotal + iva;
+
+            document.getElementById('kpiCostoDirecto').textContent = formatoCurrency(costoDirecto);
+            document.getElementById('kpiGastosIndirectos').textContent = formatoCurrency(indirectos + comision);
+            document.getElementById('kpiSubtotal').textContent = formatoCurrency(subtotal);
+            document.getElementById('kpiIVA').textContent = formatoCurrency(iva);
+            document.getElementById('kpiPrecioVenta').textContent = formatoCurrency(precioVenta);
+
+            const tbody = document.getElementById('summaryTableBody');
+            let nómina = 0;
+            appData.stages.forEach(stage => {
+                stage.personnel.forEach(p => {
+                    nómina += p.cantidad * p.escenario * p.pagoSemanal;
+                });
+            });
+            const totalPersonas = appData.stages.reduce((sum, s) => sum + s.personnel.reduce((psum, p) => psum + p.cantidad, 0), 0);
+            const totalSemanas = calcularTotalSemanas();
+            const nochesTotal = (totalSemanas * 5) / appData.operationalCosts.personas;
+            let viáticos = totalPersonas * totalSemanas * appData.operationalCosts.viaticos;
+            let hotel = nochesTotal * appData.operationalCosts.hotel;
+            let epp = totalPersonas * appData.operationalCosts.epp;
+            let dc3 = totalPersonas * appData.operationalCosts.dc3;
+            let examen = totalPersonas * appData.operationalCosts.examen;
+            let herramienta = appData.operationalCosts.herramienta;
+            let equipos = 0;
+            appData.equipos.forEach(e => {
+                let costo = e.precio;
+                if (e.periodo === 'dia') costo *= 5 * e.semanas;
+                else if (e.periodo === 'sem') costo *= e.semanas;
+                else if (e.periodo === 'mes') costo *= Math.ceil(e.semanas / 4);
+                if (e.moneda === 'USD') costo *= 17;
+                equipos += costo;
+            });
+
+            tbody.innerHTML = `
+                <tr><td>Nómina</td><td>${formatoCurrency(nómina)}</td></tr>
+                <tr><td>Viáticos</td><td>${formatoCurrency(viáticos)}</td></tr>
+                <tr><td>Hotel</td><td>${formatoCurrency(hotel)}</td></tr>
+                <tr><td>Traslados</td><td>${formatoCurrency(appData.operationalCosts.traslados)}</td></tr>
+                <tr><td>EPP</td><td>${formatoCurrency(epp)}</td></tr>
+                <tr><td>DC3</td><td>${formatoCurrency(dc3)}</td></tr>
+                <tr><td>Examen Médico</td><td>${formatoCurrency(examen)}</td></tr>
+                <tr><td>Herramienta</td><td>${formatoCurrency(herramienta)}</td></tr>
+                <tr><td>Equipos</td><td>${formatoCurrency(equipos)}</td></tr>
+                <tr><td>RC/Seguros</td><td>${formatoCurrency(appData.rcSeguro)}</td></tr>
+                <tr style="font-weight: bold;"><td>Costo Directo</td><td>${formatoCurrency(costoDirecto)}</td></tr>
+                <tr><td>Admin (${appData.admin}%)</td><td>${formatoCurrency(indirectos)}</td></tr>
+                <tr><td>Comisión (${appData.comision}%)</td><td>${formatoCurrency(comision)}</td></tr>
+                <tr style="font-weight: bold;"><td>Subtotal</td><td>${formatoCurrency(subtotal)}</td></tr>
+                <tr><td>IVA 16%</td><td>${formatoCurrency(iva)}</td></tr>
+                <tr style="background: #d4edda; font-weight: bold;"><td>TOTAL VENTA</td><td>${formatoCurrency(precioVenta)}</td></tr>
+            `;
+        }
+
+        // STEP 6
+        function actualizarStep6() {
+            const precioVenta = calcularPrecioVenta();
+            const rubros = {
+                'Hospedaje': { venta: 0, costo: 0 },
+                'Traslados': { venta: 0, costo: 0 },
+                'Viáticos': { venta: 0, costo: 0 },
+                'DC3': { venta: 0, costo: 0 },
+                'Herramienta': { venta: 0, costo: 0 },
+                'Consumibles': { venta: 0, costo: 0 },
+                'Equipos': { venta: 0, costo: 0 },
+                'EPP': { venta: 0, costo: 0 },
+                'RC/Seguros': { venta: 0, costo: 0 },
+                'Nómina MO': { venta: 0, costo: 0 }
+            };
+
+            const totalSemanas = calcularTotalSemanas();
+            const totalPersonas = appData.stages.reduce((sum, s) => sum + s.personnel.reduce((psum, p) => psum + p.cantidad, 0), 0);
+            const nochesTotal = (totalSemanas * 5) / appData.operationalCosts.personas;
+
+            rubros['Hospedaje'].venta = (nochesTotal * appData.operationalCosts.hotel) * (1 + appData.admin/100);
+            rubros['Traslados'].venta = appData.operationalCosts.traslados * (1 + appData.admin/100);
+            rubros['Viáticos'].venta = (totalPersonas * totalSemanas * appData.operationalCosts.viaticos) * (1 + appData.admin/100);
+            rubros['DC3'].venta = (totalPersonas * appData.operationalCosts.dc3) * (1 + appData.admin/100);
+            rubros['Herramienta'].venta = appData.operationalCosts.herramienta * (1 + appData.admin/100);
+            rubros['EPP'].venta = (totalPersonas * appData.operationalCosts.epp) * (1 + appData.admin/100);
+            rubros['RC/Seguros'].venta = appData.rcSeguro * (1 + appData.admin/100);
+
+            let nómina = 0;
+            appData.stages.forEach(stage => {
+                stage.personnel.forEach(p => {
+                    nómina += p.cantidad * p.escenario * p.pagoSemanal;
+                });
+            });
+            rubros['Nómina MO'].venta = nómina * (1 + appData.admin/100);
+
+            let equipos = 0;
+            appData.equipos.forEach(e => {
+                let costo = e.precio;
+                if (e.periodo === 'dia') costo *= 5 * e.semanas;
+                else if (e.periodo === 'sem') costo *= e.semanas;
+                else if (e.periodo === 'mes') costo *= Math.ceil(e.semanas / 4);
+                if (e.moneda === 'USD') costo *= 17;
+                equipos += costo;
+            });
+            rubros['Equipos'].venta = equipos * (1 + appData.admin/100);
+
+            appData.desglose = rubros;
+
+            const costoReal = Object.values(rubros).reduce((sum, r) => sum + (r.costo || 0), 0);
+            const utilidad = precioVenta - costoReal;
+            const margen = precioVenta > 0 ? (utilidad / precioVenta * 100) : 0;
+
+            document.getElementById('kpi6TotalOC').textContent = formatoCurrency(precioVenta);
+            document.getElementById('kpi6TotalCosto').textContent = formatoCurrency(costoReal);
+            document.getElementById('kpi6Utilidad').textContent = formatoCurrency(utilidad);
+            document.getElementById('kpi6Margen').textContent = (margen || 0).toFixed(1) + '%';
+
+            const tbody = document.getElementById('desglosePubTable');
+            tbody.innerHTML = Object.entries(rubros).map(([rubro, datos]) => {
+                const ganancia = datos.venta - (datos.costo || 0);
+                const margenRubro = datos.venta > 0 ? (ganancia / datos.venta * 100) : 0;
+                const colorClass = margenRubro > 20 ? 'alert-success' : margenRubro > 10 ? 'alert-warning' : 'alert-danger';
+                return `
+                    <tr>
+                        <td>${rubro}</td>
+                        <td>${formatoCurrency(datos.venta)}</td>
+                        <td><input type="number" value="${datos.costo || 0}" step="100" style="width: 100%"
+                            onchange="appData.desglose['${rubro}'].costo = parseFloat(this.value) || 0; guardarDatos(); actualizarStep6();"></td>
+                        <td>${formatoCurrency(ganancia)}</td>
+                        <td class="${colorClass}" style="text-align: center;">${(margenRubro || 0).toFixed(1)}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // STEP 7
+        function actualizarStep7() {
+            const totalSemanas = calcularTotalSemanas();
+            const tbody = document.getElementById('controlSemanalBody');
+
+            let filas = [];
+            for (let w = 1; w <= totalSemanas; w++) {
+                const persPlan = appData.stages.reduce((sum, s) => {
+                    if (w <= s.weeks) {
+                        return sum + s.personnel.reduce((psum, p) => psum + p.cantidad, 0);
+                    }
+                    return sum;
+                }, 0);
+
+                filas.push({
+                    semana: w,
+                    persPlan: persPlan,
+                    persReal: (appData.nominaData && appData.nominaData[`sem${w}`]) || 0,
+                    costoPlan: persPlan * 10000 * 5 // aproximado
+                });
+            }
+
+            let acumulado = 0;
+            tbody.innerHTML = filas.map((f, idx) => {
+                const costoReal = f.persReal * 10000 * 5 || 0;
+                const desviacion = costoReal - f.costoPlan;
+                acumulado += costoReal;
+                const alerta = desviacion > 0 ? '🔴' : '🟢';
+                return `
+                    <tr>
+                        <td>Sem ${f.semana}</td>
+                        <td>${f.persPlan}</td>
+                        <td><input type="number" value="${f.persReal}" min="0" step="1" style="width: 100%"
+                            onchange="if (!appData.nominaData) appData.nominaData = {}; appData.nominaData['sem${f.semana}'] = parseInt(this.value) || 0; guardarDatos(); actualizarStep7();"></td>
+                        <td>${formatoCurrency(f.costoPlan)}</td>
+                        <td>${formatoCurrency(costoReal)}</td>
+                        <td>${formatoCurrency(desviacion)}</td>
+                        <td><input type="number" value="0" min="0" max="100" step="5" style="width: 100%"></td>
+                        <td>${formatoCurrency(acumulado)}</td>
+                        <td>${alerta}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const costoPlanTotal = filas.reduce((sum, f) => sum + f.costoPlan, 0);
+            const costoRealTotal = filas.reduce((sum, f) => sum + ((appData.nominaData && appData.nominaData[`sem${f.semana}`]) || 0) * 10000 * 5, 0);
+
+            document.getElementById('kpi7Costoplan').textContent = formatoCurrency(costoPlanTotal);
+            document.getElementById('kpi7CostoReal').textContent = formatoCurrency(costoRealTotal);
+            document.getElementById('kpi7Desviacion').textContent = formatoCurrency(costoRealTotal - costoPlanTotal);
+
+            // Chart
+            if (charts.controlSemanal) charts.controlSemanal.destroy();
+            const ctx = document.getElementById('chartControlSemanal');
+            if (ctx) {
+                charts.controlSemanal = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: filas.map(f => `S${f.semana}`),
+                        datasets: [
+                            { label: 'Plan', data: filas.map(f => f.costoPlan), borderColor: '#0066ff', backgroundColor: 'rgba(0,102,255,0.1)', tension: 0.4 },
+                            { label: 'Real', data: filas.map(f => (appData.nominaData && appData.nominaData[`sem${f.semana}`] || 0) * 10000 * 5), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', tension: 0.4 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
+                });
+            }
+        }
+
+        // STEP 8
+        function inicializarStep8UI() {
+            renderNomina();
+        }
+
+        function actualizarStep8() {
+            renderNomina();
+        }
+
+        function renderNomina() {
+            const totalSemanas = calcularTotalSemanas();
+            const headerRow = document.getElementById('nominaHeader');
+            let headerHTML = '<tr><th>Empleado</th><th>Puesto</th>';
+            for (let w = 1; w <= totalSemanas; w++) {
+                headerHTML += `<th>S${w}</th>`;
+            }
+            headerHTML += '<th>Total</th></tr>';
+            headerRow.innerHTML = headerHTML;
+
+            const tbody = document.getElementById('nominaBody');
+            tbody.innerHTML = (appData.empleados || []).map((emp, idx) => {
+                let total = 0;
+                let rowHTML = `<tr>
+                    <td><input type="text" value="${emp.nombre || ''}" placeholder="Nombre"
+                        onchange="appData.empleados[${idx}].nombre = this.value; guardarDatos(); actualizarStep8();"></td>
+                    <td><select onchange="appData.empleados[${idx}].puesto = this.value; guardarDatos(); actualizarStep8();">
+                        ${PUESTOS_REF.map(p => `<option value="${p.puesto}" ${emp.puesto === p.puesto ? 'selected' : ''}>${p.puesto}</option>`).join('')}
+                    </select></td>`;
+                for (let w = 1; w <= totalSemanas; w++) {
+                    const key = `sem${w}`;
+                    const valor = (emp.semanas && emp.semanas[key]) || 0;
+                    total += valor;
+                    rowHTML += `<td><input type="number" value="${valor}" min="0" step="1000"
+                        onchange="if(!appData.empleados[${idx}].semanas) appData.empleados[${idx}].semanas = {}; appData.empleados[${idx}].semanas['${key}'] = parseFloat(this.value) || 0; guardarDatos(); actualizarStep8();"></td>`;
+                }
+                rowHTML += `<td>${formatoCurrency(total)}</td>
+                    <td><button class="btn btn-danger btn-small" onclick="appData.empleados.splice(${idx}, 1); renderNomina(); guardarDatos(); actualizarStep8();">X</button></td>
+                </tr>`;
+                return rowHTML;
+            }).join('');
+        }
+
+        function agregarEmpleado() {
+            appData.empleados.push({ nombre: 'Nuevo', puesto: 'Mecanico', semanas: {} });
+            renderNomina();
+            guardarDatos();
+        }
+
+        // STEP 9
+        function actualizarStep9() {
+            const accordion = document.getElementById('costosDetalleAccordion');
+
+            const sections = [
+                {
+                    title: 'Herramienta',
+                    items: HERRAMIENTA_CATALOGO.map((h, idx) => ({
+                        nombre: h.nombre,
+                        presupuestado: h.precio,
+                        cantidad: (appData.herramientas && appData.herramientas[idx]) || 0,
+                        key: `herr${idx}`
+                    }))
+                },
+                {
+                    title: 'Consumibles',
+                    items: CONSUMIBLES_CATALOGO.map((c, idx) => ({
+                        nombre: c.producto,
+                        presupuestado: c.precio,
+                        cantidad: (appData.consumibles && appData.consumibles[idx]) || 0,
+                        key: `cons${idx}`
+                    }))
+                }
+            ];
+
+            accordion.innerHTML = sections.map((section, sIdx) => `
+                <div class="accordion-item" onclick="this.classList.toggle('expanded')">
+                    <div class="accordion-header">
+                        ${section.title}
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Concepto</th>
+                                        <th>Presupuestado</th>
+                                        <th>Cantidad</th>
+                                        <th>Real</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${section.items.map((item, idx) => {
+                                        const real = item.cantidad * item.presupuestado;
+                                        return `
+                                            <tr>
+                                                <td>${item.nombre}</td>
+                                                <td>${formatoCurrency(item.presupuestado)}</td>
+                                                <td><input type="number" value="${item.cantidad}" min="0" step="1" style="width: 100%"
+                                                    onchange="if(${sIdx} === 0) { if(!appData.herramientas) appData.herramientas = []; appData.herramientas[${idx}] = parseInt(this.value) || 0; } else { if(!appData.consumibles) appData.consumibles = []; appData.consumibles[${idx}] = parseInt(this.value) || 0; } guardarDatos(); actualizarStep9();"></td>
+                                                <td>${formatoCurrency(real)}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // STEP 10
+        function actualizarStep10() {
+            const precioVenta = calcularPrecioVenta();
+            let costoReal = 0;
+            Object.values(appData.desglose || {}).forEach(r => {
+                costoReal += r.costo || 0;
+            });
+            const ganancia = precioVenta - costoReal;
+            const margen = precioVenta > 0 ? (ganancia / precioVenta * 100) : 0;
+
+            document.getElementById('kpi10PrecioVenta').textContent = formatoCurrency(precioVenta);
+            document.getElementById('kpi10CostoReal').textContent = formatoCurrency(costoReal);
+            document.getElementById('kpi10Ganancia').textContent = formatoCurrency(ganancia);
+            document.getElementById('kpi10Margen').textContent = (margen || 0).toFixed(1) + '%';
+
+            const tbody = document.getElementById('utilidadTableBody');
+            tbody.innerHTML = Object.entries(appData.desglose || {}).map(([rubro, datos]) => {
+                const gananciaRubro = datos.venta - (datos.costo || 0);
+                const margenRubro = datos.venta > 0 ? (gananciaRubro / datos.venta * 100) : 0;
+                return `
+                    <tr>
+                        <td>${rubro}</td>
+                        <td>${formatoCurrency(datos.venta)}</td>
+                        <td>${formatoCurrency(datos.costo || 0)}</td>
+                        <td>${formatoCurrency(gananciaRubro)}</td>
+                        <td>${(margenRubro || 0).toFixed(1)}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Chart
+            if (charts.utilidad) charts.utilidad.destroy();
+            const ctx = document.getElementById('chartUtilidad');
+            if (ctx) {
+                const rubros = Object.keys(appData.desglose || {});
+                const ganancias = Object.values(appData.desglose || {}).map(r => r.venta - (r.costo || 0));
+                charts.utilidad = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: rubros,
+                        datasets: [{ label: 'Ganancia', data: ganancias, backgroundColor: '#15803d' }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
+                });
+            }
+        }
+
+        // STEP 11
+        function actualizarStep11() {
+            const precioVenta = calcularPrecioVenta();
+            let costoReal = 0;
+            Object.values(appData.desglose || {}).forEach(r => {
+                costoReal += r.costo || 0;
+            });
+
+            const rubros = Object.keys(appData.desglose || {});
+            const tbody = document.getElementById('presupuestoRealBody');
+            tbody.innerHTML = rubros.map(rubro => {
+                const datos = appData.desglose[rubro];
+                const presupuesto = datos.venta || 0;
+                const real = datos.costo || 0;
+                const diferencia = presupuesto - real;
+                const variacion = presupuesto > 0 ? (diferencia / presupuesto * 100) : 0;
+                const estado = diferencia >= 0 ? '✅' : '🔴';
+                return `
+                    <tr>
+                        <td>${rubro}</td>
+                        <td>${formatoCurrency(presupuesto)}</td>
+                        <td>${formatoCurrency(real)}</td>
+                        <td>${formatoCurrency(diferencia)}</td>
+                        <td>${estado}</td>
+                        <td>${(variacion || 0).toFixed(1)}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Charts
+            if (charts.presupuestoVsReal) charts.presupuestoVsReal.destroy();
+            const ctx1 = document.getElementById('chartPresupuestoVsReal');
+            if (ctx1) {
+                charts.presupuestoVsReal = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: rubros,
+                        datasets: [
+                            { label: 'Presupuesto', data: rubros.map(r => appData.desglose[r].venta), backgroundColor: '#0066ff' },
+                            { label: 'Real', data: rubros.map(r => appData.desglose[r].costo || 0), backgroundColor: '#ef4444' }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            if (charts.desviacion) charts.desviacion.destroy();
+            const ctx2 = document.getElementById('chartDesviacion');
+            if (ctx2) {
+                charts.desviacion = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: rubros,
+                        datasets: [{
+                            label: 'Desviación',
+                            data: rubros.map(r => (appData.desglose[r].venta || 0) - (appData.desglose[r].costo || 0)),
+                            backgroundColor: rubros.map(r => ((appData.desglose[r].venta || 0) - (appData.desglose[r].costo || 0)) >= 0 ? '#15803d' : '#ef4444')
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        }
+
+        // STEP 12
+        function actualizarStep12() {
+            const precioVenta = calcularPrecioVenta();
+            let costoReal = 0;
+            Object.values(appData.desglose || {}).forEach(r => {
+                costoReal += r.costo || 0;
+            });
+            const utilidad = precioVenta - costoReal;
+            const margen = precioVenta > 0 ? (utilidad / precioVenta * 100) : 0;
+            const totalSemanas = calcularTotalSemanas();
+
+            document.getElementById('kpi12OC').textContent = formatoCurrency(precioVenta);
+            document.getElementById('kpi12Costo').textContent = formatoCurrency(costoReal);
+            document.getElementById('kpi12Utilidad').textContent = formatoCurrency(utilidad);
+            document.getElementById('kpi12Margen').textContent = (margen || 0).toFixed(1) + '%';
+            document.getElementById('kpi12Avance').textContent = '0%';
+            document.getElementById('kpi12Semanas').textContent = totalSemanas;
+
+            const rubros = Object.keys(appData.desglose || {});
+            const tbody = document.getElementById('dashboardSummaryBody');
+            tbody.innerHTML = `
+                <tr><td>Orden de Compra</td><td>${formatoCurrency(precioVenta)}</td></tr>
+                <tr><td>Costo Total Presupuestado</td><td>${formatoCurrency(Object.values(appData.desglose || {}).reduce((s, r) => s + (r.venta || 0), 0))}</td></tr>
+                <tr><td>Costo Total Real</td><td>${formatoCurrency(costoReal)}</td></tr>
+                <tr><td>Utilidad Neta</td><td style="color: #15803d; font-weight: bold;">${formatoCurrency(utilidad)}</td></tr>
+                <tr><td>Margen %</td><td style="color: #15803d; font-weight: bold;">${(margen || 0).toFixed(1)}%</td></tr>
+                <tr><td>Duración del Proyecto</td><td>${totalSemanas} semanas</td></tr>
+            `;
+
+            // Charts
+            if (charts.composicion) charts.composicion.destroy();
+            const ctx1 = document.getElementById('chartComposicion');
+            if (ctx1) {
+                charts.composicion = new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: rubros,
+                        datasets: [{ data: rubros.map(r => appData.desglose[r].costo || 0), backgroundColor: ['#0066ff', '#15803d', '#fbbf24', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            if (charts.waterfall) charts.waterfall.destroy();
+            const ctx2 = document.getElementById('chartWaterfall');
+            if (ctx2) {
+                charts.waterfall = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['OC', 'Costo Real', 'Utilidad'],
+                        datasets: [{ data: [precioVenta, costoReal, utilidad], backgroundColor: ['#0066ff', '#ef4444', '#15803d'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        }
+
+        // NAVIGATION
+        let currentStep = 1;
+
+        function irAStep(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.step-btn')[step - 1].classList.add('active');
+            currentStep = step;
+            actualizarPhaseIndicator();
+            window.scrollTo(0, 0);
+        }
+
+        // UTILITIES
+        function formatoCurrency(valor) {
+            const num = parseFloat(valor) || 0;
+            return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2 }).format(num);
+        }
+
+        function imprimirSistema() {
+            window.print();
+        }
+
+        function exportarDatos() {
+            const json = JSON.stringify(appData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `micsa-proyecto-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // SYNC INPUTS
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'projectName') appData.project.name = e.target.value;
+            else if (e.target.id === 'clientName') appData.project.client = e.target.value;
+            else if (e.target.id === 'quotationNumber') appData.project.quotation = e.target.value;
+            else if (e.target.id === 'location') appData.project.location = e.target.value;
+            else if (e.target.id === 'plant') appData.project.plant = e.target.value;
+            else if (e.target.id === 'contact') appData.project.contact = e.target.value;
+            else if (e.target.id === 'contactEmail') appData.project.email = e.target.value;
+            else if (e.target.id === 'reference') appData.project.reference = e.target.value;
+            else if (e.target.id === 'activityDescription') appData.project.activity = e.target.value;
+            else if (e.target.id === 'currency') appData.currency = e.target.value;
+            else if (e.target.id === 'viaticos') appData.operationalCosts.viaticos = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'hotelPrecio') appData.operationalCosts.hotel = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'personasPorHabitacion') appData.operationalCosts.personas = parseInt(e.target.value) || 1;
+            else if (e.target.id === 'traslados') appData.operationalCosts.traslados = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'epp') appData.operationalCosts.epp = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'dc3') appData.operationalCosts.dc3 = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'examenMedico') appData.operationalCosts.examen = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'herramientaCosto') appData.operationalCosts.herramienta = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'adminPercent') appData.admin = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'comisionPercent') appData.comision = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'rcSeguro') appData.rcSeguro = parseFloat(e.target.value) || 0;
+            else if (e.target.id === 'utilidadPercent') appData.utilidad = parseFloat(e.target.value) || 0;
+
+            guardarDatos();
+            actualizarTodosSinFormatos();
+        });
+    </script>
+</body>
+</html>
