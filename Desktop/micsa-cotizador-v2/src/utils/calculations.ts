@@ -52,6 +52,7 @@ export interface LineaDetalle {
 export interface ResultadoCotizacion {
   lineas: LineaDetalle[]
   totalNomina: number
+  totalISN: number
   totalIMSS: number
   totalEPP: number
   totalLogistica: number
@@ -114,6 +115,20 @@ export function calcular(input: ProyectoInput): ResultadoCotizacion {
         nota: `${rol.cantidad} trabajador${rol.cantidad > 1 ? 'es' : ''}, ${meses} mes${meses > 1 ? 'es' : ''}`,
       })
     }
+  }
+
+  // ── 1b. ISN Coahuila 3% sobre nómina ────────────────────────────────────────
+  let totalISN = 0
+  if (totalTrabajadores > 0 && totalNomina > 0) {
+    totalISN = totalNomina * F.ISN_PCT
+    lineas.push({
+      concepto: `ISN Coahuila 3% sobre nómina`,
+      categoria: 'IMSS',
+      costo: totalISN,
+      venta: totalISN,
+      margen: 0,
+      nota: 'Impuesto Sobre Nómina — Coahuila — Ley ISN Coahuila 2026',
+    })
   }
 
   // ── 2. IMSS ─────────────────────────────────────────────────────────────────
@@ -308,9 +323,9 @@ export function calcular(input: ProyectoInput): ResultadoCotizacion {
   }
 
   // ── GESTIÓN + TOTALES ─────────────────────────────────────────────────────────
-  const baseParaGestion = totalNomina + totalIMSS + totalEPP + totalLogistica + totalRC
+  const baseParaGestion = totalNomina + totalISN + totalIMSS + totalEPP + totalLogistica + totalRC
   const gestionMICSA = baseParaGestion * F.GESTIÓN_MICSA_PCT
-  const subtotalDirecto = totalNomina + totalIMSS + totalEPP + totalLogistica +
+  const subtotalDirecto = totalNomina + totalISN + totalIMSS + totalEPP + totalLogistica +
                           totalEquipos + totalHerramientas + totalObligatorios + totalRC
 
   lineas.push({
@@ -326,7 +341,7 @@ export function calcular(input: ProyectoInput): ResultadoCotizacion {
   const iva = subtotalAntesIVA * F.IVA
   const totalFinal = subtotalAntesIVA + iva
 
-  const costoReal = totalNomina + totalIMSS + costoEPPBase + costoEPPMensual +
+  const costoReal = totalNomina + totalISN + totalIMSS + costoEPPBase + costoEPPMensual +
     (input.incluirHospedaje ? input.diasHospedaje * totalTrabajadores * F.HOSPEDAJE_POR_NOCHE : 0) +
     (input.incluirHerramientas ? input.costoHerramientas : 0) +
     totalEquipos / (1 + F.IVA) +
@@ -338,7 +353,7 @@ export function calcular(input: ProyectoInput): ResultadoCotizacion {
 
   return {
     lineas,
-    totalNomina, totalIMSS, totalEPP, totalLogistica,
+    totalNomina, totalISN, totalIMSS, totalEPP, totalLogistica,
     totalEquipos, totalHerramientas, totalObligatorios, totalRC,
     subtotalDirecto, gestionMICSA, subtotalAntesIVA, iva, totalFinal,
     margenBruto, margenPct, costoReal, precioSinIVA: subtotalAntesIVA,

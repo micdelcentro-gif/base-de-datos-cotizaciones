@@ -83,6 +83,7 @@ export const FINANCIERO = {
   HOSPEDAJE_POR_NOCHE:  1200,
   VIATICOS_POR_DIA:     166.6,   // Source: LFT art.84
   HERRAMIENTAS_MARKUP:  2.0,
+  ISN_PCT:              0.03,    // Impuesto Sobre Nómina — Coahuila — Source: LGCG Art.19 / Ley ISN Coahuila 2026
   GESTIÓN_MICSA_PCT:    0.15,    // Source: Guía Maestra MICSA
   INDIRECTOS_PCT:       0.1197,
   IVA:                  0.16,
