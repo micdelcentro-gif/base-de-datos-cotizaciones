@@ -247,42 +247,43 @@ export function Wizard({ onSave }: { onSave: (i: ProyectoInput, r: ResultadoCoti
                   ? rol.cantidad * rol.sueldoMensual * 1.34 * durMeses
                   : rol.cantidad * rol.tarifaSemanal * durSemanas
                 return (
-                  <div key={rol.rolId} className="p-3 bg-slate-50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm text-slate-800">{rol.rolNombre}</div>
-                      </div>
-                      {/* Tarifa editable */}
-                      <div className="flex items-center gap-1 text-xs text-slate-500">
-                        <span>$</span>
+                  <div key={rol.rolId} className={`p-3 rounded-xl border transition-colors ${
+                    rol.cantidad > 0 ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 border-slate-100'
+                  }`}>
+                    {/* Línea 1: nombre + tarifa */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium text-sm text-slate-800">{rol.rolNombre}</div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-slate-400">$</span>
                         <input
                           type="number" min={0} step={500}
                           value={tarifa}
                           onChange={e => updRol(idx, esSeguridad ? 'sueldoMensual' : 'tarifaSemanal', Math.max(0, +e.target.value))}
-                          className="w-24 text-right border border-slate-200 rounded-lg px-2 py-1 text-sm font-semibold bg-white"
+                          className="w-20 text-right border border-slate-200 rounded-lg px-1.5 py-0.5 text-sm font-semibold bg-white"
                         />
-                        <span className="text-slate-400">{sufijo}</span>
+                        <span className="text-xs text-slate-400">{sufijo}</span>
                       </div>
-                      {/* Cantidad */}
+                    </div>
+                    {/* Línea 2: +/− + total */}
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => updRol(idx, 'cantidad', Math.max(0, rol.cantidad - 1))}
                           className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-sm">−</button>
                         <input type="number" min={0} max={99} value={rol.cantidad}
                           onChange={e => updRol(idx, 'cantidad', Math.max(0, +e.target.value))}
-                          className="w-12 text-center border border-slate-200 rounded-lg py-1 text-sm font-semibold" />
+                          className="w-12 text-center border border-slate-200 rounded-lg py-1 text-sm font-semibold bg-white" />
                         <button
                           onClick={() => updRol(idx, 'cantidad', rol.cantidad + 1)}
                           className="w-7 h-7 rounded-lg bg-[#1F3864] text-white hover:bg-blue-800 font-bold text-sm">+</button>
                       </div>
-                      {/* Total */}
-                      <div className="w-28 text-right text-sm font-semibold text-slate-700 shrink-0">
-                        {rol.cantidad > 0 ? fmt(costoTotal) : '—'}
+                      <div className="text-sm font-bold text-slate-700">
+                        {rol.cantidad > 0 ? fmt(costoTotal) : <span className="text-slate-300">—</span>}
                       </div>
                     </div>
                     {esSeguridad && rol.cantidad > 0 && (
-                      <div className="text-xs text-blue-600 mt-1 ml-0">
-                        ${(rol.sueldoMensual * 1.34).toLocaleString('es-MX', { maximumFractionDigits: 0 })}/mes real c/FIS × {rol.cantidad}
+                      <div className="text-xs text-blue-500 mt-1.5">
+                        ${(rol.sueldoMensual * 1.34).toLocaleString('es-MX', { maximumFractionDigits: 0 })}/mes c/FIS × {rol.cantidad} personas
                       </div>
                     )}
                   </div>
