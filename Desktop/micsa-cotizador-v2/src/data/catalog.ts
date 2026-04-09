@@ -29,16 +29,19 @@ export const EPP_SEGURIDAD_KIT = [
   { id:'gafete',    nombre:'Gafete PVC con Holograma',    costo:50,  qty:1 },
 ]
 
-// ── ROLES INDUSTRIALES (tarifa SEMANAL) ───────────────────────────────────────
-// Source: Mercado Monclova, Coahuila 2026
+// ── ROLES INDUSTRIALES (costo real semanal = sueldo pagado + cargas IMSS FSR) ──
+// Source: COT_031 SEIL/Whirlpool — cédula IMSS Feb-2026 A27-35956-10-8
+// Técnico CARRIER: sueldo $5,000/sem + IMSS $2,705 = $7,705 costo real/sem
+// Supervisor HSE $6,500 → $9,941 | Supervisor $7,000 → $10,706
+// EDITABLE en el wizard — ajustar por proyecto
 export const ROLES = [
-  { id:'mecanico',      nombre:'Mecánico / Electricista',   tarifaSemanal:10000 },
-  { id:'maniobrista',   nombre:'Maniobrista',                tarifaSemanal:8500  },
-  { id:'soldador',      nombre:'Soldador Certificado',       tarifaSemanal:12000 },
-  { id:'supervisor',    nombre:'Supervisor de Obra',         tarifaSemanal:15000 },
-  { id:'ayudante',      nombre:'Ayudante General',           tarifaSemanal:7500  },
-  { id:'electricista',  nombre:'Electricista Industrial',    tarifaSemanal:11000 },
-  { id:'instrumentista',nombre:'Instrumentista',             tarifaSemanal:13000 },
+  { id:'mecanico',      nombre:'Mecánico / Electricista',   tarifaSemanal:7705  },
+  { id:'maniobrista',   nombre:'Maniobrista',                tarifaSemanal:6500  },
+  { id:'soldador',      nombre:'Soldador Certificado',       tarifaSemanal:8800  },
+  { id:'supervisor',    nombre:'Supervisor de Obra',         tarifaSemanal:10700 },
+  { id:'ayudante',      nombre:'Ayudante General',           tarifaSemanal:5500  },
+  { id:'electricista',  nombre:'Electricista Industrial',    tarifaSemanal:8200  },
+  { id:'instrumentista',nombre:'Instrumentista',             tarifaSemanal:9500  },
 ]
 
 // ── ROLES DE SEGURIDAD PATRIMONIAL (sueldo MENSUAL neto) ─────────────────────

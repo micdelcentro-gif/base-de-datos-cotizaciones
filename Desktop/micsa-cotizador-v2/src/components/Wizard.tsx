@@ -25,7 +25,7 @@ function emptyInput(tipo: 'industrial' | 'seguridad'): ProyectoInput {
 
   return {
     tipoServicio: tipo,
-    cliente: '', ubicacion: '', descripcion: '', duracionMeses: 1,
+    cliente: '', ubicacion: '', descripcion: '', duracionValor: 1, unidadDuracion: 'meses',
     trabajadores, equipos,
     incluirHospedaje: false, diasHospedaje: 0,
     incluirHerramientas: false, costoHerramientas: 0,
@@ -177,12 +177,20 @@ export function Wizard({ onSave }: { onSave: (i: ProyectoInput, r: ResultadoCoti
             </Field>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Duración (meses) *">
-                <input type="number" min={1} max={36} className="input"
-                  value={input.duracionMeses}
-                  onChange={e => upd('duracionMeses', Math.max(1, +e.target.value))} />
+              <Field label="Duración *">
+                <div className="flex gap-2">
+                  <input type="number" min={1} max={365} className="input flex-1"
+                    value={input.duracionValor}
+                    onChange={e => upd('duracionValor', Math.max(1, +e.target.value))} />
+                  <select className="input w-28" value={input.unidadDuracion}
+                    onChange={e => upd('unidadDuracion', e.target.value)}>
+                    <option value="dias">Días</option>
+                    <option value="semanas">Semanas</option>
+                    <option value="meses">Meses</option>
+                  </select>
+                </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  = {(input.duracionMeses * 4.33).toFixed(1)} semanas
+                  = {(input.unidadDuracion === 'dias' ? input.duracionValor / 7 : input.unidadDuracion === 'semanas' ? input.duracionValor : input.duracionValor * 4.33).toFixed(1)} semanas
                 </p>
               </Field>
               {!esSeguridad && (
@@ -229,42 +237,54 @@ export function Wizard({ onSave }: { onSave: (i: ProyectoInput, r: ResultadoCoti
 
             <div className="space-y-3">
               {input.trabajadores.map((rol, idx) => {
-                const sueldoDisplay = esSeguridad ? rol.sueldoMensual : rol.tarifaSemanal
-                const sufijo = esSeguridad ? '/mes' : '/semana'
-                const costoMes = esSeguridad
-                  ? rol.sueldoMensual * 1.34
-                  : rol.tarifaSemanal * 4.33
+                const tarifa = esSeguridad ? rol.sueldoMensual : rol.tarifaSemanal
+                const sufijo = esSeguridad ? '/mes' : '/sem'
+                const durSemanas = input.unidadDuracion === 'dias' ? input.duracionValor / 7
+                  : input.unidadDuracion === 'semanas' ? input.duracionValor
+                  : input.duracionValor * 4.33
+                const durMeses = durSemanas / 4.33
+                const costoTotal = esSeguridad
+                  ? rol.cantidad * rol.sueldoMensual * 1.34 * durMeses
+                  : rol.cantidad * rol.tarifaSemanal * durSemanas
                 return (
-                  <div key={rol.rolId} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm text-slate-800">{rol.rolNombre}</div>
-                      <div className="text-xs text-slate-500">
-                        ${sueldoDisplay.toLocaleString('es-MX')}{sufijo}
-                        {esSeguridad && (
-                          <span className="ml-2 text-blue-600">
-                            → ${costoMes.toLocaleString('es-MX', { maximumFractionDigits: 0 })}/mes real c/FIS
-                          </span>
-                        )}
+                  <div key={rol.rolId} className="p-3 bg-slate-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-slate-800">{rol.rolNombre}</div>
+                      </div>
+                      {/* Tarifa editable */}
+                      <div className="flex items-center gap-1 text-xs text-slate-500">
+                        <span>$</span>
+                        <input
+                          type="number" min={0} step={500}
+                          value={tarifa}
+                          onChange={e => updRol(idx, esSeguridad ? 'sueldoMensual' : 'tarifaSemanal', Math.max(0, +e.target.value))}
+                          className="w-24 text-right border border-slate-200 rounded-lg px-2 py-1 text-sm font-semibold bg-white"
+                        />
+                        <span className="text-slate-400">{sufijo}</span>
+                      </div>
+                      {/* Cantidad */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => updRol(idx, 'cantidad', Math.max(0, rol.cantidad - 1))}
+                          className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-sm">−</button>
+                        <input type="number" min={0} max={99} value={rol.cantidad}
+                          onChange={e => updRol(idx, 'cantidad', Math.max(0, +e.target.value))}
+                          className="w-12 text-center border border-slate-200 rounded-lg py-1 text-sm font-semibold" />
+                        <button
+                          onClick={() => updRol(idx, 'cantidad', rol.cantidad + 1)}
+                          className="w-7 h-7 rounded-lg bg-[#1F3864] text-white hover:bg-blue-800 font-bold text-sm">+</button>
+                      </div>
+                      {/* Total */}
+                      <div className="w-28 text-right text-sm font-semibold text-slate-700 shrink-0">
+                        {rol.cantidad > 0 ? fmt(costoTotal) : '—'}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updRol(idx, 'cantidad', Math.max(0, rol.cantidad - 1))}
-                        className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold">−</button>
-                      <input type="number" min={0} max={99} value={rol.cantidad}
-                        onChange={e => updRol(idx, 'cantidad', Math.max(0, +e.target.value))}
-                        className="w-14 text-center border border-slate-200 rounded-lg py-1.5 text-sm font-semibold" />
-                      <button
-                        onClick={() => updRol(idx, 'cantidad', rol.cantidad + 1)}
-                        className="w-8 h-8 rounded-lg bg-[#1F3864] text-white hover:bg-blue-800 font-bold">+</button>
-                    </div>
-                    <div className="w-36 text-right text-sm font-medium text-slate-700">
-                      {rol.cantidad > 0
-                        ? fmt(esSeguridad
-                            ? rol.cantidad * rol.sueldoMensual * 1.34 * input.duracionMeses
-                            : rol.cantidad * rol.tarifaSemanal * input.duracionMeses * 4.33)
-                        : '—'}
-                    </div>
+                    {esSeguridad && rol.cantidad > 0 && (
+                      <div className="text-xs text-blue-600 mt-1 ml-0">
+                        ${(rol.sueldoMensual * 1.34).toLocaleString('es-MX', { maximumFractionDigits: 0 })}/mes real c/FIS × {rol.cantidad}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -349,10 +369,10 @@ export function Wizard({ onSave }: { onSave: (i: ProyectoInput, r: ResultadoCoti
                       {esCuatri && eq.cantidad > 0 && (
                         <div className="text-right text-sm">
                           <div className="font-bold text-blue-700">
-                            {fmt(eq.cantidad * eq.tarifa * input.duracionMeses * 1.16)} renta c/IVA
+                            {fmt(eq.cantidad * eq.tarifa * (input.unidadDuracion === 'dias' ? input.duracionValor/7/4.33 : input.unidadDuracion === 'semanas' ? input.duracionValor/4.33 : input.duracionValor) * 1.16)} renta c/IVA
                           </div>
                           <div className="text-xs text-blue-500">
-                            + {fmt(eq.cantidad * 1500 * input.duracionMeses)} gasolina
+                            + {fmt(eq.cantidad * 1500 * (input.unidadDuracion === 'dias' ? input.duracionValor/30 : input.unidadDuracion === 'semanas' ? input.duracionValor/4.33 : input.duracionValor))} gasolina
                           </div>
                         </div>
                       )}

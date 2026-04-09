@@ -21,12 +21,15 @@ export interface EquipoItem {
   duracion: number
 }
 
+export type UnidadDuracion = 'dias' | 'semanas' | 'meses'
+
 export interface ProyectoInput {
   tipoServicio: TipoServicio
   cliente: string
   ubicacion: string
   descripcion: string
-  duracionMeses: number
+  duracionValor: number
+  unidadDuracion: UnidadDuracion
   trabajadores: RolItem[]
   equipos: EquipoItem[]
   incluirHospedaje: boolean
@@ -73,9 +76,10 @@ export interface ResultadoCotizacion {
 
 export function calcular(input: ProyectoInput): ResultadoCotizacion {
   const F = FINANCIERO
-  const meses = input.duracionMeses
+  const { duracionValor: val, unidadDuracion: unidad } = input
+  const semanas = unidad === 'dias' ? val / 7 : unidad === 'semanas' ? val : val * F.SEMANAS_MES
+  const meses = semanas / F.SEMANAS_MES
   const totalTrabajadores = input.trabajadores.reduce((s, r) => s + r.cantidad, 0)
-  const semanas = meses * F.SEMANAS_MES
   const esSeguridad = input.tipoServicio === 'seguridad'
 
   const lineas: LineaDetalle[] = []
@@ -92,7 +96,7 @@ export function calcular(input: ProyectoInput): ResultadoCotizacion {
       const costoTotal = rol.cantidad * costoUnitarioMes * meses
       totalNomina += costoTotal
       lineas.push({
-        concepto: `Nómina — ${rol.rolNombre} (${rol.cantidad} × $${rol.sueldoMensual.toLocaleString('es-MX')}/mes × FIS ${F.FIS} × ${meses} mes${meses > 1 ? 'es' : ''})`,
+        concepto: `Nómina — ${rol.rolNombre} (${rol.cantidad} × $${rol.sueldoMensual.toLocaleString('es-MX')}/mes × FIS ${F.FIS} × ${meses.toFixed(2)} mes${meses !== 1 ? 'es' : ''})`,
         categoria: 'Nómina',
         costo: costoTotal,
         venta: costoTotal,
