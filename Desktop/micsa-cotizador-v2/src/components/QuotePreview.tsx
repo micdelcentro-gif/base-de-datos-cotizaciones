@@ -80,7 +80,7 @@ export function QuotePreview({ input, result, onBack, onSave }: Props) {
           </div>
           <div>
             <div className="text-xs text-slate-500 uppercase tracking-wide font-semibold">Duración</div>
-            <div className="font-semibold text-slate-700">{input.duracionMeses} mes{input.duracionMeses>1?'es':''} ({(input.duracionMeses*4.33).toFixed(1)} semanas)</div>
+            <div className="font-semibold text-slate-700">{input.duracionValor} {input.unidadDuracion}</div>
           </div>
           <div>
             <div className="text-xs text-slate-500 uppercase tracking-wide font-semibold">Tipo</div>
