@@ -56,7 +56,7 @@ export function QuoteHistory({ quotes, onNew, onDelete }: Props) {
               <div className="font-bold text-slate-800 text-lg truncate">{q.input.cliente}</div>
               <div className="text-slate-500 text-sm truncate">{q.input.descripcion}</div>
               <div className="text-xs text-slate-400 mt-1">
-                {q.input.ubicacion} · {q.input.duracionMeses} mes{q.input.duracionMeses > 1 ? 'es' : ''}
+                {q.input.ubicacion} · {q.input.duracionValor} {q.input.unidadDuracion}
                 {q.input.local ? ' · Local' : ' · Foráneo'}
               </div>
             </div>
