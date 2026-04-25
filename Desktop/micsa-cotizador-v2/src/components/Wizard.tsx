@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { calcular, fmt, pct } from '../utils/calculations'
 import type { ProyectoInput, RolItem, EquipoItem, ResultadoCotizacion } from '../utils/calculations'
-import { ROLES, ROLES_SEGURIDAD, EQUIPOS, EQUIPOS_SEGURIDAD } from '../data/catalog'
+import { ROLES, ROLES_SEGURIDAD, EQUIPOS, EQUIPOS_SEGURIDAD, FINANCIERO } from '../data/catalog'
 import { QuotePreview } from './QuotePreview'
 
 // ── Estado inicial por tipo de servicio ──────────────────────────────────────
@@ -190,7 +190,7 @@ export function Wizard({ onSave }: { onSave: (i: ProyectoInput, r: ResultadoCoti
                   </select>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  = {(input.unidadDuracion === 'dias' ? input.duracionValor / 7 : input.unidadDuracion === 'semanas' ? input.duracionValor : input.duracionValor * 4.33).toFixed(1)} semanas
+                  = {(input.unidadDuracion === 'dias' ? input.duracionValor / 7 : input.unidadDuracion === 'semanas' ? input.duracionValor : input.duracionValor * FINANCIERO.SEMANAS_MES).toFixed(1)} semanas
                 </p>
               </Field>
               {!esSeguridad && (
@@ -241,8 +241,8 @@ export function Wizard({ onSave }: { onSave: (i: ProyectoInput, r: ResultadoCoti
                 const sufijo = esSeguridad ? '/mes' : '/sem'
                 const durSemanas = input.unidadDuracion === 'dias' ? input.duracionValor / 7
                   : input.unidadDuracion === 'semanas' ? input.duracionValor
-                  : input.duracionValor * 4.33
-                const durMeses = durSemanas / 4.33
+                  : input.duracionValor * FINANCIERO.SEMANAS_MES
+                const durMeses = durSemanas / FINANCIERO.SEMANAS_MES
                 const costoTotal = esSeguridad
                   ? rol.cantidad * rol.sueldoMensual * 1.34 * durMeses
                   : rol.cantidad * rol.tarifaSemanal * durSemanas
