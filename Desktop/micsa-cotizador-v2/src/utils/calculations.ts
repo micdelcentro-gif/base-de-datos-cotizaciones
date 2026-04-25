@@ -303,7 +303,7 @@ export function calcular(input: ProyectoInput): ResultadoCotizacion {
     const conIVA = subtotal * (1 + F.IVA)
     totalEquipos += conIVA
     lineas.push({
-      concepto: `Renta — ${eq.equipoNombre} (${eq.cantidad} × ${eq.duracion} ${eq.unidad}${eq.duracion > 1 ? 's' : ''})`,
+      concepto: `Renta — ${eq.equipoNombre} (${eq.cantidad} × ${eq.duracion} ${eq.duracion > 1 ? (eq.unidad === 'mes' ? 'meses' : eq.unidad === 'dia' ? 'días' : 'semanas') : (eq.unidad === 'dia' ? 'día' : eq.unidad)})`,
       categoria: 'Equipos',
       costo: subtotal,
       venta: conIVA,
