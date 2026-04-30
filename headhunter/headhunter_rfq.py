@@ -17,11 +17,12 @@ from bs4 import BeautifulSoup
 # ── Paths ──────────────────────────────────────────────────────────────────────
 DB_PATH  = Path.home() / "MICSA-Brain" / "RFQs" / "MICSA_RFQ_DATABASE.xlsx"
 COT_DIR  = Path.home() / "MICSA-Brain" / "RFQs" / "COTs"
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 COT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Telegram ───────────────────────────────────────────────────────────────────
-TELEGRAM_TOKEN = "8621290655:AAG3QKnb5JOCvgqL58uGSm5v2ezqQw29J80"
-JORDAN_ID      = "1579401409"
+TELEGRAM_TOKEN = os.getenv("NEXO_TELEGRAM_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN", "")
+JORDAN_ID      = os.getenv("NEXO_TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID", "")
 
 # ── Styles ─────────────────────────────────────────────────────────────────────
 NAVY   = "0A1628"
@@ -41,6 +42,44 @@ def hfont(bold=True, color=WHITE, size=11):
 
 def hfill(color):
     return PatternFill("solid", fgColor=color)
+
+
+def ensure_maestro():
+    """Crea el Excel maestro si no existe o si le faltan hojas base."""
+    headers = {
+        "RFQs": [
+            "RFQ ID", "Producto", "Marca", "Modelo", "Cantidad", "Ubicacion",
+            "Urgencia", "Categoria", "Tipo", "Match MICSA", "Status", "Fecha",
+            "Link Post", "Autor", "Empresa",
+        ],
+        "COTs Generadas": [
+            "COT ID", "RFQ ID", "Producto", "Fecha", "Precio Ref USD",
+            "Precio MICSA USD", "Archivo",
+        ],
+    }
+
+    if DB_PATH.exists():
+        wb = load_workbook(DB_PATH)
+    else:
+        wb = Workbook()
+        wb.active.title = "RFQs"
+
+    for sheet, cols in headers.items():
+        ws = wb[sheet] if sheet in wb.sheetnames else wb.create_sheet(sheet)
+        if ws.max_row == 1 and all(ws.cell(row=1, column=i + 1).value is None for i in range(len(cols))):
+            ws.append(cols)
+        for col, title in enumerate(cols, 1):
+            cell = ws.cell(row=1, column=col)
+            if not cell.value:
+                cell.value = title
+            cell.font = hfont(color=WHITE)
+            cell.fill = hfill(NAVY)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+            ws.column_dimensions[get_column_letter(col)].width = max(14, min(28, len(title) + 3))
+
+    wb.save(DB_PATH)
+    wb.close()
 
 
 # ── 1. PARSE RFQ ───────────────────────────────────────────────────────────────
@@ -485,6 +524,7 @@ def get_next_id(ws, col=1, prefix="RFQ") -> str:
 
 
 def append_maestro(rfq: dict, cot_path: Path, cot_num: int, mejor_precio, rfq_id: str, fecha: str):
+    ensure_maestro()
     wb = load_workbook(DB_PATH)
 
     # RFQs
@@ -525,6 +565,10 @@ def append_maestro(rfq: dict, cot_path: Path, cot_num: int, mejor_precio, rfq_id
 
 # ── 5. TELEGRAM NOTIFY ────────────────────────────────────────────────────────
 def telegram_send(mensaje: str, archivo: Path = None):
+    if not TELEGRAM_TOKEN or not JORDAN_ID:
+        print("      [warn] Telegram no configurado. Define NEXO_TELEGRAM_TOKEN y NEXO_TELEGRAM_CHAT_ID.")
+        return False
+
     base = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
     if archivo and archivo.exists():
         with open(archivo, "rb") as f:
@@ -551,6 +595,7 @@ def main():
 
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M")
     stamp = datetime.now().strftime("%y%m%d-%H%M")
+    ensure_maestro()
 
     print(f"[1/5] Parseando RFQ...")
     rfq = parse_rfq(texto)

@@ -24,6 +24,17 @@ httpx
 beautifulsoup4
 ```
 
+## Variables opcionales
+
+Telegram no se guarda en el repo. Para enviar el archivo automáticamente:
+
+```bash
+export NEXO_TELEGRAM_TOKEN="token_del_bot"
+export NEXO_TELEGRAM_CHAT_ID="chat_id_de_jordan"
+```
+
+Si no se configuran, el script genera COT y actualiza el Excel maestro sin enviar Telegram.
+
 ## Pipeline
 
 1. Parse del RFQ — extrae producto, marca, modelo, cantidad, ubicación, urgencia
